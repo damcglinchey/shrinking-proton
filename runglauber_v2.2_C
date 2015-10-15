@@ -52,10 +52,11 @@ using namespace std;
 //---------------------------------------------------------------------------------
 void runAndSaveNtuple(const Int_t n,
                       const char *sysA="Au",
-		              const char *sysB="Au",
-		              const Double_t signn=42,
-		              const Double_t sigwidth=-1,
+    		              const char *sysB="Au",
+    		              const Double_t signn=42,
+    		              const Double_t sigwidth=-1,
                       const Double_t mind=0.4,
+                      const Double_t xval=0,
                       const char *fname="glau_auau_ntuple.root");
 
 //---------------------------------------------------------------------------------
@@ -63,7 +64,7 @@ void runAndSaveNucleons(const Int_t n,
                         const char *sysA="Au",           
                         const char *sysB="Au",           
                         const Double_t signn=42,           
-    		       		const Double_t sigwidth=-1,
+          		       		const Double_t sigwidth=-1,
                         const Double_t mind=0.4,
                         const Bool_t verbose=0,
                         const char *fname="glau_auau_nucleons.root");
@@ -225,12 +226,17 @@ private:
   Double_t     f2Cx;            //Two-component x
   TF1         *fPTot;           //Cross section distribution
   Double_t     fBNN;            //average NN impact parameter
+  //D. McGlinchey Oct 15 2015
+  Double_t     fAx;             //Parton x value modifying A xsect
+  Int_t        fAmod;           //Index of nucleon in A whose xsect is modified
 
   Bool_t       CalcResults(Double_t bgen);
   Bool_t       CalcEvent(Double_t bgen);
 
 public:
-  TGlauberMC(const char* NA = "Pb", const char* NB = "Pb", Double_t xsect = 42, Double_t xsectsigma=0);
+  TGlauberMC(const char* NA = "Pb", const char* NB = "Pb", 
+             Double_t xsect = 42, Double_t xsectsigma=0,
+             Double_t xval = 0);
   virtual      ~TGlauberMC() {Reset();}
   
   void          Draw(Option_t* option);
@@ -265,6 +271,7 @@ public:
   void          SetBmax(Double_t bmax)     {fBMax = bmax;}
   void          SetMinDistance(Double_t d) {fANucleus.SetMinDist(d); fBNucleus.SetMinDist(d);}
   void          SetShiftCMS(Bool_t b)      {fANucleus.SetShiftCMS(b); fBNucleus.SetShiftCMS(b);}
+  void          SetxVal(Double_t x)        {fAx = x;}
   static void   PrintVersion()             {cout << "TGlauberMC " << Version() << endl;}
   static const char *Version()            {return "v2.2";}
 
@@ -278,9 +285,10 @@ void runAndSaveNtuple(const Int_t n,
                       const Double_t signn,
                       const Double_t sigwidth,
                       const Double_t mind,
+                      const Double_t xval,
                       const char *fname)
 {
-  TGlauberMC *mcg=new TGlauberMC(sysA,sysB,signn,sigwidth);
+  TGlauberMC *mcg=new TGlauberMC(sysA,sysB,signn,sigwidth,xval);
   mcg->SetMinDistance(mind);
   mcg->Run(n);
   TNtuple  *nt=mcg->GetNtuple();
@@ -841,7 +849,7 @@ void TGlauNucleus::ThrowNucleons(Double_t xshift)
 ClassImp(TGlauberMC)
 //---------------------------------------------------------------------------------
 
-TGlauberMC::TGlauberMC(const char* NA, const char* NB, Double_t xsect, Double_t xsectsigma) :
+TGlauberMC::TGlauberMC(const char* NA, const char* NB, Double_t xsect, Double_t xsectsigma, Double_t xval) :
   fANucleus(NA),fBNucleus(NB),
   fXSect(0),fXSectOmega(0),fXSectLambda(0),fXSectEvent(0),
   fNucleonsA(0),fNucleonsB(0),fNucleons(0),
@@ -851,7 +859,8 @@ TGlauberMC::TGlauberMC(const char* NA, const char* NB, Double_t xsect, Double_t 
   fMeanX_A(0),fMeanY_A(0),fMeanX_B(0),fMeanY_B(0),fB_MC(0),
   fEvents(0),fTotalEvents(0),fBMin(0),fBMax(0),fMaxNpartFound(0),
   fNpart(0),fNpartA(0),fNpartB(0),fSumW(0),fSumWA(0),fSumWB(0), 
-  fNcoll(0),fSx2(0),fSy2(0),fSxy(0),f2Cx(0),fPTot(0), fBNN(0)
+  fNcoll(0),fSx2(0),fSy2(0),fSxy(0),f2Cx(0),fPTot(0), fBNN(0),
+  fAx(0),fAmod(-1)
 {
   fBMin = 0;
   fBMax = 20;
@@ -867,6 +876,9 @@ TGlauberMC::TGlauberMC(const char* NA, const char* NB, Double_t xsect, Double_t 
     fPTot->SetParameters(fXSect,fXSectOmega,fXSectLambda);
     cout << "final <sigma>=" << fPTot->GetHistogram()->GetMean() << endl;
   }
+  // Only fill for valid values of x. x=0 will produce default behavior
+  if (xval > 0 && xval < 1)
+    fAx = xval; 
 
   TString name(Form("Glauber_%s_%s",fANucleus.GetName(),fBNucleus.GetName()));
   TString title(Form("Glauber %s+%s Version",fANucleus.GetName(),fBNucleus.GetName()));
@@ -884,6 +896,10 @@ Bool_t TGlauberMC::CalcEvent(Double_t bgen)
     TGlauNucleon *nucleonA=(TGlauNucleon*)(fNucleonsA->At(i));
     nucleonA->SetInNucleusA();
   }
+  // if desired, choose 1 nucleon in the target whose cross section
+  // will be modified by the given x value (fAx).
+  fAmod = (int) gRandom->Integer(fAN);
+
   fBNucleus.ThrowNucleons(bgen/2.);
   fNucleonsB = fBNucleus.GetNucleons();
   fBN = fBNucleus.GetN();
@@ -901,6 +917,9 @@ Bool_t TGlauberMC::CalcEvent(Double_t bgen)
   // "ball" diameter = distance at which two balls interact
   Double_t d2 = (Double_t)fXSectEvent/(TMath::Pi()*10); // in fm^2
 
+  // Modified "ball" diameter
+  Double_t d2mod = (Double_t)fXSectEvent/(TMath::Pi()*10) * (1 - fAx); // in fm^2
+
   // loop over all nucleons
   fBNN=0;
   Int_t nc=0;
@@ -911,9 +930,9 @@ Bool_t TGlauberMC::CalcEvent(Double_t bgen)
       Double_t dx = nucleonB->GetX()-nucleonA->GetX();
       Double_t dy = nucleonB->GetY()-nucleonA->GetY();
       Double_t dij = dx*dx+dy*dy;
-      if (dij < d2) {
-	nucleonB->Collide();
-	nucleonA->Collide();
+      if ( (j == fAmod && dij < d2mod) || (j != fAmod && dij < d2)) {
+        nucleonB->Collide();
+        nucleonA->Collide();
         fBNN+=TMath::Sqrt(dij);
         ++nc;
       }
