@@ -35,6 +35,7 @@ Looking at the centrality categorization we get approximately
     [0-10%]  BBCs charge > 38
     [0-20%]  BBCs charge > 27
     [60-84%] BBCs charge < 7.5
+    [70-84%] BBCs charge < 4.5
 
 
 
