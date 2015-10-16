@@ -899,7 +899,6 @@ Bool_t TGlauberMC::CalcEvent(Double_t bgen)
   // if desired, choose 1 nucleon in the target whose cross section
   // will be modified by the given x value (fAx).
   fAmod = (int) gRandom->Integer(fAN);
-
   fBNucleus.ThrowNucleons(bgen/2.);
   fNucleonsB = fBNucleus.GetNucleons();
   fBN = fBNucleus.GetN();
