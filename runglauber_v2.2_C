@@ -917,7 +917,8 @@ Bool_t TGlauberMC::CalcEvent(Double_t bgen)
   Double_t d2 = (Double_t)fXSectEvent/(TMath::Pi()*10); // in fm^2
 
   // Modified "ball" diameter
-  Double_t d2mod = (Double_t)fXSectEvent/(TMath::Pi()*10) * (1 - fAx); // in fm^2
+  // Double_t d2mod = (Double_t)fXSectEvent/(TMath::Pi()*10) * (1 - fAx); // in fm^2
+  Double_t d2mod = (Double_t)fXSectEvent/(TMath::Pi()*10) * TMath::Exp(-2.5 * fAx); // in fm^2
 
   // loop over all nucleons
   fBNN=0;
