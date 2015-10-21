@@ -18,7 +18,10 @@
 #include <TStyle.h>
 #include <TMath.h>
 #include <TGraph.h>
+#include <TGraphErrors.h>
 #include <TF1.h>
+#include <TLegend.h>
+#include <TBox.h>
 
 #include <iostream>
 
@@ -48,33 +51,47 @@ Double_t NBD(Double_t *x, Double_t *par)
 void calculate_RCP()
 {
 
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+
   //=====================================================//
   // SET RUNNING CONDITIONS
   //=====================================================//
 
-  const int NX = 3;             // Number of x values
-  double x[] = {0.0, 0.05, 0.1};         // x values
-  // const char *xFiles[NX] = {    // Files for each x value
-  //   "glauber_pau_ntuple_100k.root",
-  //   "glauber_pau_snn42_x005_ntuple_100k.root",
+  // const int NX = 4;             // Number of x values
+  // double x[] = {0.0, 0.05, 0.1, 0.125};         // x values
+  const int NX = 6;             // Number of x values
+  double x[] = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5};         // x values
+  // const char *xFiles[] = {    // Files for each x value
+  //   "glauber_pau_snn42_x0_ntuple_100k.root",
   //   "glauber_pau_snn42_x01_ntuple_100k.root",
+  //   "glauber_pau_snn42_x02_ntuple_100k.root",
+  //   "glauber_pau_snn42_x03_ntuple_100k.root",
+  //   "glauber_pau_snn42_x04_ntuple_100k.root",
+  //   "glauber_pau_snn42_x05_ntuple_100k.root",
+  // };
+  // const char *xFiles[] = {    // Files for each x value
+  //   "glauber_dau_snn42_x0_ntuple_100k.root",
+  //   "glauber_dau_snn42_x01_ntuple_100k.root",
+  //   "glauber_dau_snn42_x02_ntuple_100k.root",
+  //   "glauber_dau_snn42_x03_ntuple_100k.root",
+  //   "glauber_dau_snn42_x04_ntuple_100k.root",
+  //   "glauber_dau_snn42_x05_ntuple_100k.root",
   // };
   const char *xFiles[] = {    // Files for each x value
-    "glauber_dau_snn42_x0_ntuple_100k.root",
-    "glauber_dau_snn42_x005_ntuple_100k.root",
-    "glauber_dau_snn42_x01_ntuple_100k.root",
+    "glauber_he3au_snn42_x0_ntuple_100k.root",
+    "glauber_he3au_snn42_x01_ntuple_100k.root",
+    "glauber_he3au_snn42_x02_ntuple_100k.root",
+    "glauber_he3au_snn42_x03_ntuple_100k.root",
+    "glauber_he3au_snn42_x04_ntuple_100k.root",
+    "glauber_he3au_snn42_x05_ntuple_100k.root",
   };
-  // const char *xFiles[NX] = {    // Files for each x value
-  //   "glauber_he3au_snn42_x0_ntuple_100k.root",
-  //   "glauber_he3au_snn42_x005_ntuple_100k.root",
-  //   "glauber_he3au_snn42_x01_ntuple_100k.root",
-  // };
 
   // Set the collision system. Current options are:
   // "pAu"   - p+Au 200 GeV
   // "dAu"   - d+Au 200 GeV
   // "He3Au" - He3+Au 200 GeV
-  const char *collSystem = "dAu";
+  const char *collSystem = "He3Au";
 
   bool saveRcp = false;
   const char *outFile = "Rcp_systems.root";
@@ -108,7 +125,8 @@ void calculate_RCP()
   TH1D *hBBCs[NX];
   for (int i = 0; i < NX; i++)
   {
-    hBBCs[i] = new TH1D(Form("hBBCs_%i", i), ";BBCs charge", 201, -0.5, 200.5);
+    // hBBCs[i] = new TH1D(Form("hBBCs_%i", i), ";BBCs charge", 201, -0.5, 200.5);
+    hBBCs[i] = new TH1D(Form("hBBCs_%i", i), ";BBCs charge", 800, 0, 200);
     hBBCs[i]->SetLineColor(i + 1);
   }
 
@@ -128,6 +146,10 @@ void calculate_RCP()
   cout << endl;
   cout << "--> Setting up the collision system ..." << endl;
 
+  dcent_cent   = 0.05; // 0-5%
+  dcent_periph = 0.30; // 70-100%
+
+
   if (collSystem == "pAu")
   {
     cout << "  System is p+Au" << endl;
@@ -135,19 +157,6 @@ void calculate_RCP()
 
     NBD_mu = 3.14;
     NBD_k  = 0.47;
-
-    BBC_cent   = 48.816666; // 0-5% zvertex=0
-    BBC_periph =  4.216667; // 70-84% zvertex=0
-
-    Ncoll_cent   = 9.693; // 0-5%
-    Ncoll_periph = 2.188;  // 70-84%
-
-    dcent_cent   = 0.05;
-    dcent_periph = 0.14;
-
-    //currently for d+Au, need to fix
-    trig_eff_params[0] = 0.897;
-    trig_eff_params[1] = 0.612;
 
     ntpName = "nt_p_Au";
   }
@@ -159,15 +168,6 @@ void calculate_RCP()
 
     NBD_mu = 3.038;
     NBD_k  = 0.464;
-
-    BBC_cent   = 71.165; // 0-5% zvertex=0
-    BBC_periph =  7.235; // 70-88% zvertex=0
-
-    Ncoll_cent   = 18.115; // 0-5%
-    Ncoll_periph = 2.638;  // 70-88%
-
-    dcent_cent   = 0.05;
-    dcent_periph = 0.18;
 
     // currently from my thesis
     trig_eff_params[0] = 0.897;
@@ -181,23 +181,9 @@ void calculate_RCP()
     cout << "  System is He3+Au" << endl;
     // http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1207/Run14_3HeAu_200GeV_Centrality_Categorization.pdf
 
-    // WARNING!! THESE ARE TEMPORARILY COPIED FROM THE D+AU
-    //           NEED TO GET THE REAL VALUES FROM JAMIE (NOT IN THE NOTE?)
-    NBD_mu = 3.038;
-    NBD_k  = 0.464;
-
-    BBC_cent   = 87.4905; // 0-5% zvertex=0
-    BBC_periph =  7.9065; // 70-83% zvertex=0
-
-    Ncoll_cent   = 26.082; // 0-5%
-    Ncoll_periph =  2.585; // 70-88%
-
-    dcent_cent   = 0.05;
-    dcent_periph = 0.18;
-
-    // currently for d+Au, need to fix
-    trig_eff_params[0] = 0.897;
-    trig_eff_params[1] = 0.612;
+    // From Jamie
+    NBD_mu = 2.91;
+    NBD_k  = 0.546;
 
     ntpName = "nt_He3_Au";
 
@@ -205,14 +191,11 @@ void calculate_RCP()
 
   // print values
   cout << "  NBD : mu=" << NBD_mu << " k=" << NBD_k << endl;
-  cout << "  BBCs: central>" << BBC_cent << " periph<" << BBC_periph << endl;
-  cout << "  NColl: central=" << Ncoll_cent << " periph=" << Ncoll_periph << endl;
   cout << "  dcent: central=" << dcent_cent << " periph=" << dcent_periph << endl;
-  cout << "  Trig Eff Pars: " << trig_eff_params[0] << ", " << trig_eff_params[1] << endl;
   cout << "  Ntuple name: " << ntpName << endl;
 
   fNBD->SetParameters(NBD_mu, NBD_k);
-  feff->SetParameters(trig_eff_params[0], trig_eff_params[1]);
+  // feff->SetParameters(trig_eff_params[0], trig_eff_params[1]);
 
   //=====================================================//
   // GET NTUPLE(S) FROM FILE AND CALCULATE YIELD
@@ -246,6 +229,7 @@ void calculate_RCP()
     hNcoll[ix] = (TH1D*) gDirectory->FindObject("htmp");
     hNcoll[ix]->SetDirectory(0);
     hNcoll[ix]->SetName(Form("hNcoll_%i", ix));
+    hNcoll[ix]->SetTitle(";N_{coll}");
     hNcoll[ix]->SetLineColor(ix + 1);
 
     cout << "   <Ncoll>: " << hNcoll[ix]->GetMean() << endl;
@@ -275,19 +259,61 @@ void calculate_RCP()
       }
     }
 
-
-    // apply the trigger efficiency
-    for (int j = 1; j <= hBBCs[ix]->GetNbinsX(); j++)
+    // find the bin limits (for x=0 only)
+    if (ix == 0)
     {
-      double c = hBBCs[ix]->GetBinCenter(j);
-      double bc = hBBCs[ix]->GetBinContent(j);
-      double eff = feff->Eval(c);
-      hBBCs[ix]->SetBinContent(c, bc * eff);
+      // Find the central count
+      int nbins = hBBCs[ix]->GetNbinsX();
+      double tot = hBBCs[ix]->Integral(1, nbins);
+      for (int ibin = hBBCs[ix]->GetNbinsX(); ibin > 0; ibin--)
+      {
+        double integral = hBBCs[ix]->Integral(ibin, nbins);
+
+        //0 - 5%
+        if (integral / tot > 0.05)
+        {
+          Nevent_cent[ix] = integral;
+          cout << "     cent=" << hBBCs[ix]->GetBinCenter(ibin)
+               << " frac=" << integral / tot
+               << endl;
+          break;
+        }
+      }
+
+      // Find the peripheral count
+      for (int ibin = 1; ibin <= nbins; ibin++)
+      {
+        double integral = hBBCs[ix]->Integral(1, ibin);
+
+        // 70-100%
+        if (integral / tot > 0.3)
+        {
+          Nevent_periph[ix] = integral;
+          cout << "     periph=" << hBBCs[ix]->GetBinCenter(ibin)
+               << " frac=" << integral / tot
+               << endl;
+          break;
+        }
+      }
+
+      cout << "     Rcp= (" << Nevent_cent[ix] << " / " << Nevent_periph[ix] << ")"
+           << " " << (Nevent_cent[ix] / 0.05) / (Nevent_periph[ix] / 0.30)
+           << endl;
+
     }
+
+    // // apply the trigger efficiency
+    // for (int j = 1; j <= hBBCs[ix]->GetNbinsX(); j++)
+    // {
+    //   double c = hBBCs[ix]->GetBinCenter(j);
+    //   double bc = hBBCs[ix]->GetBinContent(j);
+    //   double eff = feff->Eval(c);
+    //   hBBCs[ix]->SetBinContent(c, bc * eff);
+    // }
 
     // check the quantiles
     int nq = 2;
-    double xq[] = {18./88., 83./88.};
+    double xq[] = {0.30, 0.95}; // 70-100%, 0-5%
     double yq[2] = {0};
     hBBCs[ix]->GetQuantiles(nq, yq, xq);
     cout << " quantiles: " << yq[0] << " " << yq[1] << endl;
@@ -303,31 +329,6 @@ void calculate_RCP()
     Nevent_periph[ix] = hBBCs[ix]->Integral(1,
                                             hBBCs[ix]->FindBin(BBC_periph));
 
-
-
-
-
-    // // unsigned int Nentries = ntp->GetEntries();
-    // unsigned int Nentries = 10000;
-
-    // for (unsigned int ientry = 0; ientry < Nentries; ientry++)
-    // {
-
-    //   ntp->GetEntry(ientry);
-
-    //   double BBCs = 0;
-    //   fNBD->SetParameters(Ncoll * NBD_mu, Ncoll * NBD_k);
-    //   BBCs = fNBD->GetRandom();
-    //   // for (int i = 0; i < (int)Ncoll; i++)
-    //   //   BBCs += fNBD->GetRandom();
-
-    //   hBBCs[ix]->Fill(BBCs);
-
-    //   if (BBCs > BBC_cent)
-    //     Nevent_cent[ix]++;
-    //   if (BBCs < BBC_periph)
-    //     Nevent_periph[ix]++;
-    // }
 
     cout << "   N central    = " << Nevent_cent[ix] << endl;
     cout << "   N peripheral = " << Nevent_periph[ix] << endl;
@@ -346,7 +347,7 @@ void calculate_RCP()
   cout << "--> Calculating RCP ..." << endl;
 
   grcp = new TGraph();
-  grcp->SetTitle(";p_{T} [GeV/c];R_{CP}");
+  grcp->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
   grcp->SetLineStyle(1);
   grcp->SetLineColor(kBlue);
   // grcp->SetPoint(0, 0, 1);
@@ -354,15 +355,68 @@ void calculate_RCP()
   for (int ix = 0; ix < NX; ix++)
   {
     // x = pT / sqrt(s)
-    double pT = x[ix] * 200;
+    double pT = 0.5* x[ix] * 200;
 
     double rcp = Nevent_cent[ix] / dcent_cent;
     rcp /= Nevent_periph[ix] / dcent_periph;
     // rcp *= Ncoll_periph / Ncoll_cent;
 
-    cout << " " << pT << " " << rcp << endl;
+    cout << " " << x[ix] << " " << pT << " " << rcp << endl;
 
-    grcp->SetPoint(ix + 1, pT, rcp);
+    grcp->SetPoint(ix + 1, x[ix], rcp);
+  }
+
+  //=====================================================//
+  // Run 8 d+Au Jet Rcp
+  //=====================================================//
+  cout << endl;
+  cout << "--> Run 8 d+Au Jet Rcp";
+
+  // Run 8 d+Au Jet RCP
+  // http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1222/dvp-dAuJet-FinalResults-Note-03.pdf
+  // 0-20% / 60-88%
+  const int NJET = 8;
+  double pTl_jet[] =   {12.1, 14.5, 17.3, 20.7, 24.7, 29.4, 35.1, 41.9};
+  double pTh_jet[] =   {14.5, 17.3, 20.7, 24.7, 29.4, 35.1, 41.9, 50.0};
+  double Rcp_jet[] =   {0.73, 0.71, 0.66, 0.61, 0.57, 0.54, 0.52, 0.50};
+  double Rcp_jet_A[] = {0.01, 0.01, 0.02, 0.02, 0.02, 0.04, 0.05, 0.06};
+  double Rcp_jet_B[] = {0.06, 0.03, 0.02, 0.02, 0.03, 0.05, 0.08, 0.09};
+
+  double pT_jet[NJET] = {0};
+  double pTe_jet[NJET] = {0};
+  double x_jet[NJET] = {0};
+  double xl_jet[NJET] = {0};
+  double xh_jet[NJET] = {0};
+  double xe_jet[NJET] = {0};
+  for (int i = 0; i < NJET; i++)
+  {
+    pT_jet[i] = 0.5 * (pTl_jet[i] + pTh_jet[i]);
+    x_jet[i] = 2 * pT_jet[i] / 200;
+
+    xl_jet[i] = 2 * pTl_jet[i] / 200;
+    xh_jet[i] = 2 * pTh_jet[i] / 200;
+  }
+
+  TGraphErrors *gRCP_jet = new TGraphErrors(NJET, 
+                                            x_jet, Rcp_jet, 
+                                            xe_jet, Rcp_jet_A);
+  gRCP_jet->SetMarkerStyle(20);
+  gRCP_jet->SetMarkerColor(kBlack);
+
+
+  // systematic uncertainties
+  TBox *bRcp_jet[NJET];
+  for (int i = 0; i < NJET; i++)
+  {
+    double x1 = xl_jet[i];
+    double x2 = xh_jet[i];
+
+    double y1 = Rcp_jet[i] - Rcp_jet_B[i];
+    double y2 = Rcp_jet[i] + Rcp_jet_B[i];
+
+    bRcp_jet[i] = new TBox(x1, y1, x2, y2);
+    bRcp_jet[i]->SetFillColor(kBlack);
+    bRcp_jet[i]->SetFillStyle(3003);
   }
 
   //=====================================================//
@@ -371,13 +425,43 @@ void calculate_RCP()
   cout << endl;
   cout << "--> Plotting ..." << endl;
 
+  TLegend *legNcoll;
+  if (collSystem == "pAu")
+    legNcoll = new TLegend(0.5, 0.5, 0.9, 0.9);
+  else
+    legNcoll = new TLegend(0.15, 0.15, 0.5, 0.6);
+  legNcoll->SetFillStyle(0);
+  legNcoll->SetBorderSize(0);
+  for (int ix = 0; ix < NX; ix++)
+  {
+    legNcoll->AddEntry(hNcoll[ix],
+                       Form("x=%.2f <N_{coll}>=%.2f", x[ix], hNcoll[ix]->GetMean()),
+                       "L");
+  }
+
+  TLatex label;
+  label.SetNDC();
+  label.SetTextAlign(22);
+
+  TH1F* haxis_rcp = new TH1F("haxis_rcp", 
+                             ";x (x_{jet}=2 * p_{T}^{jet} / #sqrt{s_{NN}});R_{CP}",
+                             100, 0, 1);
+  haxis_rcp->SetMinimum(0);
+  haxis_rcp->SetMaximum(1.1);
+
   //=====================================================//
   // PLOT
   //=====================================================//
 
   TCanvas *crcp = new TCanvas("crcp", "RCP", 800, 800);
   crcp->cd(1);
-  grcp->Draw("AL");
+  haxis_rcp->GetXaxis()->SetRangeUser(0, 0.6);
+  haxis_rcp->Draw();
+  grcp->Draw("L");
+
+  gRCP_jet->Draw("P");
+  for (int i = 0; i < NJET; i++)
+    bRcp_jet[i]->Draw();
 
 
   TCanvas *ctest = new TCanvas("ctest", "test", 1500, 500);
@@ -388,12 +472,15 @@ void calculate_RCP()
   hNcoll[0]->Draw();
   for (int ix = 1; ix < NX; ix++)
     hNcoll[ix]->Draw("same");
+  legNcoll->Draw("same");
+  label.DrawLatex(0.5, 0.95, collSystem);
 
   ctest->cd(2);
   gPad->SetLogy();
   hBBCs[0]->Draw();
   for (int ix = 1; ix < NX; ix++)
     hBBCs[ix]->Draw("same");
+  label.DrawLatex(0.5, 0.95, collSystem);
 
   //=====================================================//
   // SAVE
@@ -402,6 +489,9 @@ void calculate_RCP()
   {
     cout << endl;
     cout << "--> Saving RCP to " << outFile << endl;
+
+    ctest->Print(Form("NcollBBCcharge_%s.pdf", collSystem));
+    crcp->Print(Form("Rcp_%s.pdf", collSystem));
 
     TFile *fout = new TFile(outFile, "UPDATE");
 
