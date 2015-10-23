@@ -9,6 +9,17 @@
 // Oct 15 2015
 //
 ////////////////////////////////////////////////////////////////////////////////
+//
+// Useful References:
+//  -- pAu --
+// https://www.phenix.bnl.gov/WWW/p/draft/nagle/PHENIX/nagle_run15_pau_update_05282015.pdf
+//  -- dAu --
+// http://www.phenix.bnl.gov/phenix/WWW/p/info/an/900/Run8_dAu_200GeV_Centrality_Categorization.pdf
+// http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1087/Run8_dAu_200GeV_Centrality_Addendum-01.pdf
+//  -- He3Au --
+// http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1207/Run14_3HeAu_200GeV_Centrality_Categorization.pdf
+//
+////////////////////////////////////////////////////////////////////////////////
 
 #include <TFile.h>
 #include <TNtuple.h>
@@ -22,6 +33,7 @@
 #include <TF1.h>
 #include <TLegend.h>
 #include <TBox.h>
+#include <TLine.h>
 
 #include <iostream>
 
@@ -58,144 +70,125 @@ void calculate_RCP()
   // SET RUNNING CONDITIONS
   //=====================================================//
 
-  // const int NX = 4;             // Number of x values
-  // double x[] = {0.0, 0.05, 0.1, 0.125};         // x values
   const int NX = 6;             // Number of x values
   double x[] = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5};         // x values
-  // const char *xFiles[] = {    // Files for each x value
-  //   "glauber_pau_snn42_x0_ntuple_100k.root",
-  //   "glauber_pau_snn42_x01_ntuple_100k.root",
-  //   "glauber_pau_snn42_x02_ntuple_100k.root",
-  //   "glauber_pau_snn42_x03_ntuple_100k.root",
-  //   "glauber_pau_snn42_x04_ntuple_100k.root",
-  //   "glauber_pau_snn42_x05_ntuple_100k.root",
-  // };
-  // const char *xFiles[] = {    // Files for each x value
-  //   "glauber_dau_snn42_x0_ntuple_100k.root",
-  //   "glauber_dau_snn42_x01_ntuple_100k.root",
-  //   "glauber_dau_snn42_x02_ntuple_100k.root",
-  //   "glauber_dau_snn42_x03_ntuple_100k.root",
-  //   "glauber_dau_snn42_x04_ntuple_100k.root",
-  //   "glauber_dau_snn42_x05_ntuple_100k.root",
-  // };
-  const char *xFiles[] = {    // Files for each x value
-    "glauber_he3au_snn42_x0_ntuple_100k.root",
-    "glauber_he3au_snn42_x01_ntuple_100k.root",
-    "glauber_he3au_snn42_x02_ntuple_100k.root",
-    "glauber_he3au_snn42_x03_ntuple_100k.root",
-    "glauber_he3au_snn42_x04_ntuple_100k.root",
-    "glauber_he3au_snn42_x05_ntuple_100k.root",
+
+  const int NSYSTEMS = 3;
+  const char *collSystem[] = {"pAu", "dAu", "He3Au"};
+
+  bool saveRcp = true;
+  const char *outFile = "Rcp_systems.root";
+
+
+  // Negative Binomial Distribution parameters for each system
+  double NBD_mu[] =
+  {
+    3.14, // pAu
+    3.04, // dAu
+    2.91, // He3Au
+  };
+  double NBD_k[] =
+  {
+    0.47, // pAu
+    0.46, // dAu
+    0.55, // He3Au
   };
 
-  // Set the collision system. Current options are:
-  // "pAu"   - p+Au 200 GeV
-  // "dAu"   - d+Au 200 GeV
-  // "He3Au" - He3+Au 200 GeV
-  const char *collSystem = "He3Au";
+  // Files for each x value for each system
+  const char *xFiles[NSYSTEMS][NX] =
+  {
+    { // pAu Files
+      "glauber_pau_snn42_x0_ntuple_100k.root",
+      "glauber_pau_snn42_x01_ntuple_100k.root",
+      "glauber_pau_snn42_x02_ntuple_100k.root",
+      "glauber_pau_snn42_x03_ntuple_100k.root",
+      "glauber_pau_snn42_x04_ntuple_100k.root",
+      "glauber_pau_snn42_x05_ntuple_100k.root",
+    },
+    { // dAu Files
+      "glauber_dau_snn42_x0_ntuple_100k.root",
+      "glauber_dau_snn42_x01_ntuple_100k.root",
+      "glauber_dau_snn42_x02_ntuple_100k.root",
+      "glauber_dau_snn42_x03_ntuple_100k.root",
+      "glauber_dau_snn42_x04_ntuple_100k.root",
+      "glauber_dau_snn42_x05_ntuple_100k.root",
+    },
+    { // He3Au Files
+      "glauber_he3au_snn42_x0_ntuple_100k.root",
+      "glauber_he3au_snn42_x01_ntuple_100k.root",
+      "glauber_he3au_snn42_x02_ntuple_100k.root",
+      "glauber_he3au_snn42_x03_ntuple_100k.root",
+      "glauber_he3au_snn42_x04_ntuple_100k.root",
+      "glauber_he3au_snn42_x05_ntuple_100k.root",
+    },
 
-  bool saveRcp = false;
-  const char *outFile = "Rcp_systems.root";
+  };
+
+  // Ntuple name stored in files for each system
+  const char *ntpName[NSYSTEMS] =
+  {
+    "nt_p_Au", // pAu
+    "nt_dh_Au", // dAu
+    "nt_He3_Au", // He3Au
+  };
+
+  // Centrality bins
+  // double dcent_cent   = 0.05; // 0-5%
+  // double dcent_periph = 0.30; // 70-100%
+  double dcent_cent   = 0.20; // 0-20%
+  double dcent_periph = 0.40; // 60-100%
+
+
+  // const int NCENT = 4;
+  // double centl[] = { 0, 20, 40,  60};
+  // double centh[] = {20, 40, 60, 100};
+  const int NCENT = 9;
+  double centl[] = { 0,  5, 10, 20, 30, 40, 50, 60,  70};
+  double centh[] = { 5, 10, 20, 30, 40, 50, 60, 70, 100};
+
+  // line colors
+  int colors[NSYSTEMS] = { kBlue, kRed, kGreen + 2};
 
   //=====================================================//
   // DECLARE VARIABLES
   //=====================================================//
 
   // collision system variables
-  double NBD_mu = 0;
-  double NBD_k = 0;
-  double BBC_cent = 0;
+  double BBC_central = 0;
   double BBC_periph = 0;
-  double Ncoll_cent = 0;
-  double Ncoll_periph = 0;
-  double dcent_cent = 0;
-  double dcent_periph = 0;
-  double trig_eff_params[2] = {0};
 
   TF1 *fNBD = new TF1("fNBD", NBD, 0, 200, 2);
-
-  TF1* feff = new TF1("feff", "1. - TMath::Exp(-1.*(x/[0])^{[1]})", 0, 200);
 
   // For running over ntuples
   TFile *fin;
   TNtuple *ntp;
-  const char *ntpName = "";
   Float_t Ncoll;
 
-  TH1D *hNcoll[NX];
-  TH1D *hBBCs[NX];
-  for (int i = 0; i < NX; i++)
+  TH1D *hNcoll[NSYSTEMS][NX];
+  TH1D *hBBCs[NSYSTEMS][NX];
+  for (int isys = 0; isys < NSYSTEMS; isys++)
   {
-    // hBBCs[i] = new TH1D(Form("hBBCs_%i", i), ";BBCs charge", 201, -0.5, 200.5);
-    hBBCs[i] = new TH1D(Form("hBBCs_%i", i), ";BBCs charge", 800, 0, 200);
-    hBBCs[i]->SetLineColor(i + 1);
+    for (int i = 0; i < NX; i++)
+    {
+      hBBCs[isys][i] = new TH1D(Form("hBBCs_%i_%i", isys, i), ";BBCs charge", 800, 0, 200);
+      hBBCs[isys][i]->SetLineColor(i + 1);
+    }
   }
 
   TH1D* htmp;
 
 
   // For counting
-  double Nevent_cent[NX] = {0};
-  double Nevent_periph[NX] = {0};
+  double Nevent_central[NSYSTEMS][NX] = {0};
+  double Nevent_periph[NSYSTEMS][NX] = {0};
 
   // Calculating RCP
-  TGraph *grcp;
-
-  //=====================================================//
-  // SET UP COLLISION SYSTEM VALUES
-  //=====================================================//
-  cout << endl;
-  cout << "--> Setting up the collision system ..." << endl;
-
-  dcent_cent   = 0.05; // 0-5%
-  dcent_periph = 0.30; // 70-100%
+  TGraph *grcp[NSYSTEMS];
 
 
-  if (collSystem == "pAu")
-  {
-    cout << "  System is p+Au" << endl;
-    // https://www.phenix.bnl.gov/WWW/p/draft/nagle/PHENIX/nagle_run15_pau_update_05282015.pdf
-
-    NBD_mu = 3.14;
-    NBD_k  = 0.47;
-
-    ntpName = "nt_p_Au";
-  }
-  if (collSystem == "dAu")
-  {
-    cout << "  System is d+Au" << endl;
-    //http://www.phenix.bnl.gov/phenix/WWW/p/info/an/900/Run8_dAu_200GeV_Centrality_Categorization.pdf
-    //http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1087/Run8_dAu_200GeV_Centrality_Addendum-01.pdf
-
-    NBD_mu = 3.038;
-    NBD_k  = 0.464;
-
-    // currently from my thesis
-    trig_eff_params[0] = 0.897;
-    trig_eff_params[1] = 0.612;
-
-    ntpName = "nt_dh_Au";
-
-  }
-  if (collSystem == "He3Au")
-  {
-    cout << "  System is He3+Au" << endl;
-    // http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1207/Run14_3HeAu_200GeV_Centrality_Categorization.pdf
-
-    // From Jamie
-    NBD_mu = 2.91;
-    NBD_k  = 0.546;
-
-    ntpName = "nt_He3_Au";
-
-  }
-
-  // print values
-  cout << "  NBD : mu=" << NBD_mu << " k=" << NBD_k << endl;
-  cout << "  dcent: central=" << dcent_cent << " periph=" << dcent_periph << endl;
-  cout << "  Ntuple name: " << ntpName << endl;
-
-  fNBD->SetParameters(NBD_mu, NBD_k);
-  // feff->SetParameters(trig_eff_params[0], trig_eff_params[1]);
+  double Nevent_cent[NSYSTEMS][NX][NCENT] = {0};
+  double BBC_cent[NCENT] = {0};
+  TGraph *grcp_cent[NSYSTEMS][NX];
 
   //=====================================================//
   // GET NTUPLE(S) FROM FILE AND CALCULATE YIELD
@@ -203,167 +196,209 @@ void calculate_RCP()
   cout << endl;
   cout << "--> Reading Ntuples from files ..." << endl;
 
-  for (int ix = 0; ix < NX; ix++)
+  for (int isys = 0; isys < NSYSTEMS; isys++)
   {
-    fin = TFile::Open(xFiles[ix]);
-    if (!fin)
+    cout << "------------------------------" << endl;
+    cout << "          " << collSystem[isys] << endl;
+    cout << "------------------------------" << endl;
+
+    // print values
+    cout << "  NBD : mu=" << NBD_mu[isys] << " k=" << NBD_k[isys] << endl;
+    cout << "  Ntuple name: " << ntpName[isys] << endl;
+
+    fNBD->SetParameters(NBD_mu[isys], NBD_k[isys]);
+    // feff->SetParameters(trig_eff_params[0], trig_eff_params[1]);
+
+
+    for (int ix = 0; ix < NX; ix++)
     {
-      cout << "ERROR!! Unable to open " << xFiles[ix] << endl;
-      return;
-    }
-    else
-      cout << "----> Reading " << xFiles[ix] << " for x=" << x[ix] << endl;
-
-    ntp = (TNtuple*) fin->Get(ntpName);
-    if (!ntp)
-    {
-      cout << "ERROR!! Unable to find " << ntpName << " in " << xFiles[ix] << endl;
-      return;
-    }
-
-    ntp->SetBranchAddress("Ncoll", &Ncoll);
-
-    // htmp = new TH1D("htmp", ";Ncoll", 51, -0.5, 50.5);
-    ntp->Draw("Ncoll>>htmp(50, 0.5, 50.5)", "", "goff");
-
-    hNcoll[ix] = (TH1D*) gDirectory->FindObject("htmp");
-    hNcoll[ix]->SetDirectory(0);
-    hNcoll[ix]->SetName(Form("hNcoll_%i", ix));
-    hNcoll[ix]->SetTitle(";N_{coll}");
-    hNcoll[ix]->SetLineColor(ix + 1);
-
-    cout << "   <Ncoll>: " << hNcoll[ix]->GetMean() << endl;
-
-    //Convolve with NBD to get BBC charge
-    for (int i = 1; i <= hNcoll[ix]->GetNbinsX(); i++)
-    {
-      double ncoll = hNcoll[ix]->GetBinCenter(i);
-      double w = hNcoll[ix]->GetBinContent(i);
-
-      fNBD->SetParameters(ncoll * NBD_mu, ncoll * NBD_k);
-
-      for (int j = 1; j <= hBBCs[ix]->GetNbinsX(); j++)
+      fin = TFile::Open(xFiles[isys][ix]);
+      if (!fin)
       {
-        double c = hBBCs[ix]->GetBinCenter(j);
-        double bc = hBBCs[ix]->GetBinContent(j);
-
-        double v = w * fNBD->Eval(c);
-
-        hBBCs[ix]->SetBinContent(j, v + bc);
-
-        // cout << " ncoll:" << ncoll << " BBCc:" << c
-        //      << " w:" << w << " NBD:" << fNBD->Eval(c)
-        //      << " v:" << v << " bc:" << bc
-        //      << " new bc:" << v + bc
-        //      << endl;
+        cout << "ERROR!! Unable to open " << xFiles[isys][ix] << endl;
+        return;
       }
-    }
+      else
+        cout << "----> Reading " << xFiles[isys][ix] << " for x=" << x[ix] << endl;
 
-    // find the bin limits (for x=0 only)
-    if (ix == 0)
-    {
-      // Find the central count
-      int nbins = hBBCs[ix]->GetNbinsX();
-      double tot = hBBCs[ix]->Integral(1, nbins);
-      for (int ibin = hBBCs[ix]->GetNbinsX(); ibin > 0; ibin--)
+      ntp = (TNtuple*) fin->Get(ntpName[isys]);
+      if (!ntp)
       {
-        double integral = hBBCs[ix]->Integral(ibin, nbins);
+        cout << "ERROR!! Unable to find " << ntpName[isys] << " in " << xFiles[isys][ix] << endl;
+        return;
+      }
 
-        //0 - 5%
-        if (integral / tot > 0.05)
+      ntp->Draw("Ncoll>>htmp(50, 0.5, 50.5)", "", "goff");
+
+      hNcoll[isys][ix] = (TH1D*) gDirectory->FindObject("htmp");
+      hNcoll[isys][ix]->SetDirectory(0);
+      hNcoll[isys][ix]->SetName(Form("hNcoll_%i_%i", isys, ix));
+      hNcoll[isys][ix]->SetTitle(";N_{coll}");
+      hNcoll[isys][ix]->SetLineColor(ix + 1);
+
+      cout << "   <Ncoll>: " << hNcoll[isys][ix]->GetMean() << endl;
+
+      //Convolve with NBD to get BBC charge
+      for (int i = 1; i <= hNcoll[isys][ix]->GetNbinsX(); i++)
+      {
+        double ncoll = hNcoll[isys][ix]->GetBinCenter(i);
+        double w = hNcoll[isys][ix]->GetBinContent(i);
+
+        fNBD->SetParameters(ncoll * NBD_mu[isys], ncoll * NBD_k[isys]);
+
+        for (int j = 1; j <= hBBCs[isys][ix]->GetNbinsX(); j++)
         {
-          Nevent_cent[ix] = integral;
-          cout << "     cent=" << hBBCs[ix]->GetBinCenter(ibin)
-               << " frac=" << integral / tot
-               << endl;
-          break;
+          double c = hBBCs[isys][ix]->GetBinCenter(j);
+          double bc = hBBCs[isys][ix]->GetBinContent(j);
+
+          double v = w * fNBD->Eval(c);
+
+          hBBCs[isys][ix]->SetBinContent(j, v + bc);
+
+          // cout << " ncoll:" << ncoll << " BBCc:" << c
+          //      << " w:" << w << " NBD:" << fNBD->Eval(c)
+          //      << " v:" << v << " bc:" << bc
+          //      << " new bc:" << v + bc
+          //      << endl;
         }
       }
 
-      // Find the peripheral count
-      for (int ibin = 1; ibin <= nbins; ibin++)
-      {
-        double integral = hBBCs[ix]->Integral(1, ibin);
+      // // apply the trigger efficiency
+      // for (int j = 1; j <= hBBCs[ix]->GetNbinsX(); j++)
+      // {
+      //   double c = hBBCs[ix]->GetBinCenter(j);
+      //   double bc = hBBCs[ix]->GetBinContent(j);
+      //   double eff = feff->Eval(c);
+      //   hBBCs[ix]->SetBinContent(c, bc * eff);
+      // }
 
-        // 70-100%
-        if (integral / tot > 0.3)
-        {
-          Nevent_periph[ix] = integral;
-          cout << "     periph=" << hBBCs[ix]->GetBinCenter(ibin)
-               << " frac=" << integral / tot
-               << endl;
-          break;
-        }
-      }
-
-      cout << "     Rcp= (" << Nevent_cent[ix] << " / " << Nevent_periph[ix] << ")"
-           << " " << (Nevent_cent[ix] / 0.05) / (Nevent_periph[ix] / 0.30)
+      // check the quantiles
+      double xq[2];
+      double yq[2] = {0};
+      xq[0] = dcent_periph;
+      xq[1] = 1. - dcent_cent;
+      hBBCs[isys][ix]->GetQuantiles(2, yq, xq);
+      cout << " quantiles: "
+           << xq[0] << ": " << yq[0] << "  "
+           << xq[1] << ": " << yq[1] << "  "
            << endl;
+      if (ix == 0)
+      {
+        BBC_periph = yq[0];
+        BBC_central = yq[1];
+      }
+
+      // Count the number of events
+      Nevent_central[isys][ix] = hBBCs[isys][ix]->Integral(hBBCs[isys][ix]->FindBin(BBC_central),
+                                 hBBCs[isys][ix]->GetNbinsX());
+      Nevent_periph[isys][ix] = hBBCs[isys][ix]->Integral(1,
+                                hBBCs[isys][ix]->FindBin(BBC_periph));
+
+
+      cout << "   N central    = " << Nevent_central[isys][ix] << endl;
+      cout << "   N peripheral = " << Nevent_periph[isys][ix] << endl;
+
+
+
+      // get the number of events for each centrality bin
+      if (ix == 0)
+      {
+        double xq_c[NCENT - 1];
+        double yq_c[NCENT - 1] = {0};
+        for (int icent = 0; icent < NCENT - 1; icent++)
+          xq_c[icent] = (100. - centh[icent]) / 100.;
+
+        hBBCs[isys][ix]->GetQuantiles(NCENT - 1, yq_c, xq_c);
+
+        for (int icent = 0; icent < NCENT - 1; icent++)
+        {
+          BBC_cent[icent] = yq_c[icent];
+          cout << "   " << icent << " "
+               << xq_c[icent] << " "
+               << yq_c[icent] << endl;
+        }
+      }
+
+      for (int icent = 0; icent < NCENT; icent++)
+      {
+        if (icent == 0)
+          Nevent_cent[isys][ix][icent] = hBBCs[isys][ix]->Integral(hBBCs[isys][ix]->FindBin(BBC_cent[icent]),
+                                         hBBCs[isys][ix]->GetNbinsX());
+        else if (icent == NCENT - 1)
+          Nevent_cent[isys][ix][icent] = hBBCs[isys][ix]->Integral(1,
+                                         hBBCs[isys][ix]->FindBin(BBC_cent[icent - 1]));
+        else
+          Nevent_cent[isys][ix][icent] = hBBCs[isys][ix]->Integral(hBBCs[isys][ix]->FindBin(BBC_cent[icent]),
+                                         hBBCs[isys][ix]->FindBin(BBC_cent[icent - 1]));
+
+        cout << "   " << isys << " " << ix << " " << icent
+             << " " << Nevent_cent[isys][ix][icent] << endl;
+      }
+
+      // delete htmp;
+      delete ntp;
+      fin->Close();
+      delete fin;
 
     }
-
-    // // apply the trigger efficiency
-    // for (int j = 1; j <= hBBCs[ix]->GetNbinsX(); j++)
-    // {
-    //   double c = hBBCs[ix]->GetBinCenter(j);
-    //   double bc = hBBCs[ix]->GetBinContent(j);
-    //   double eff = feff->Eval(c);
-    //   hBBCs[ix]->SetBinContent(c, bc * eff);
-    // }
-
-    // check the quantiles
-    int nq = 2;
-    double xq[] = {0.30, 0.95}; // 70-100%, 0-5%
-    double yq[2] = {0};
-    hBBCs[ix]->GetQuantiles(nq, yq, xq);
-    cout << " quantiles: " << yq[0] << " " << yq[1] << endl;
-    if (ix == 0)
-    {
-      BBC_periph = yq[0];
-      BBC_cent = yq[1];
-    }
-
-    // Count the number of events
-    Nevent_cent[ix] = hBBCs[ix]->Integral(hBBCs[ix]->FindBin(BBC_cent),
-                                          hBBCs[ix]->GetNbinsX());
-    Nevent_periph[ix] = hBBCs[ix]->Integral(1,
-                                            hBBCs[ix]->FindBin(BBC_periph));
-
-
-    cout << "   N central    = " << Nevent_cent[ix] << endl;
-    cout << "   N peripheral = " << Nevent_periph[ix] << endl;
-
-    // delete htmp;
-    delete ntp;
-    fin->Close();
-    delete fin;
 
   }
-
   //=====================================================//
   // CALCULATE RCP
   //=====================================================//
   cout << endl;
   cout << "--> Calculating RCP ..." << endl;
 
-  grcp = new TGraph();
-  grcp->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
-  grcp->SetLineStyle(1);
-  grcp->SetLineColor(kBlue);
-  // grcp->SetPoint(0, 0, 1);
-
-  for (int ix = 0; ix < NX; ix++)
+  for (int isys = 0; isys < NSYSTEMS; isys++)
   {
-    // x = pT / sqrt(s)
-    double pT = 0.5* x[ix] * 200;
+    grcp[isys] = new TGraph();
+    grcp[isys]->SetName(Form("grcp_%i", isys));
+    grcp[isys]->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+    grcp[isys]->SetLineStyle(1);
+    grcp[isys]->SetLineColor(colors[isys]);
+    // grcp[isys]->SetPoint(0, 0, 1);
 
-    double rcp = Nevent_cent[ix] / dcent_cent;
-    rcp /= Nevent_periph[ix] / dcent_periph;
-    // rcp *= Ncoll_periph / Ncoll_cent;
+    for (int ix = 0; ix < NX; ix++)
+    {
+      // x = pT / sqrt(s)
+      double pT = 0.5 * x[ix] * 200;
 
-    cout << " " << x[ix] << " " << pT << " " << rcp << endl;
+      double rcp = Nevent_central[isys][ix] / dcent_cent;
+      rcp /= Nevent_periph[isys][ix] / dcent_periph;
 
-    grcp->SetPoint(ix + 1, x[ix], rcp);
+      cout << " " << x[ix] << " " << pT << " " << rcp << endl;
+
+      grcp[isys]->SetPoint(ix + 1, x[ix], rcp);
+    }
+  }
+
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+  {
+    for (int ix = 0; ix < NX; ix++)
+    {
+      grcp_cent[isys][ix] = new TGraph();
+      grcp_cent[isys][ix]->SetName(Form("grcp_cent_%i_%i", isys, ix));
+      grcp_cent[isys][ix]->SetTitle("; centrality ; R ");
+      grcp_cent[isys][ix]->SetLineStyle(1);
+      grcp_cent[isys][ix]->SetLineColor(1 + ix);
+      grcp_cent[isys][ix]->SetLineWidth(2);
+
+      for (int icent = 0; icent < NCENT; icent++)
+      {
+        double rcp = Nevent_cent[isys][ix][icent] / (centh[icent] - centl[icent]);
+        rcp /= Nevent_cent[isys][ix][4] / (centh[4] - centl[4]);
+
+
+        // cout << "  " << isys << " " << x[ix]
+        //      << " " << icent
+        //      << " " << Nevent_cent[isys][ix][icent] << " " << (centh[icent] - centl[icent])
+        //      << " " << Nevent_cent[isys][ix][4] << " " << (centh[4] - centl[4])
+        //      << " " << rcp
+        //      << endl;
+
+        grcp_cent[isys][ix]->SetPoint(icent, icent, rcp);
+      }
+    }
   }
 
   //=====================================================//
@@ -397,9 +432,9 @@ void calculate_RCP()
     xh_jet[i] = 2 * pTh_jet[i] / 200;
   }
 
-  TGraphErrors *gRCP_jet = new TGraphErrors(NJET, 
-                                            x_jet, Rcp_jet, 
-                                            xe_jet, Rcp_jet_A);
+  TGraphErrors *gRCP_jet = new TGraphErrors(NJET,
+      x_jet, Rcp_jet,
+      xe_jet, Rcp_jet_A);
   gRCP_jet->SetMarkerStyle(20);
   gRCP_jet->SetMarkerColor(kBlack);
 
@@ -425,29 +460,65 @@ void calculate_RCP()
   cout << endl;
   cout << "--> Plotting ..." << endl;
 
-  TLegend *legNcoll;
-  if (collSystem == "pAu")
-    legNcoll = new TLegend(0.5, 0.5, 0.9, 0.9);
-  else
-    legNcoll = new TLegend(0.15, 0.15, 0.5, 0.6);
-  legNcoll->SetFillStyle(0);
-  legNcoll->SetBorderSize(0);
-  for (int ix = 0; ix < NX; ix++)
+  TLegend *legNcoll[NSYSTEMS];
+  for (int isys = 0; isys < NSYSTEMS; isys++)
   {
-    legNcoll->AddEntry(hNcoll[ix],
-                       Form("x=%.2f <N_{coll}>=%.2f", x[ix], hNcoll[ix]->GetMean()),
-                       "L");
+    if (isys == 0)
+      legNcoll[isys] = new TLegend(0.5, 0.5, 0.9, 0.9);
+    else
+      legNcoll[isys] = new TLegend(0.15, 0.15, 0.5, 0.6);
+    legNcoll[isys]->SetFillStyle(0);
+    legNcoll[isys]->SetBorderSize(0);
+    for (int ix = 0; ix < NX; ix++)
+    {
+      legNcoll[isys]->AddEntry(hNcoll[isys][ix],
+                               Form("x=%.2f <N_{coll}>=%.2f", x[ix], hNcoll[isys][ix]->GetMean()),
+                               "L");
+    }
   }
 
   TLatex label;
   label.SetNDC();
   label.SetTextAlign(22);
 
-  TH1F* haxis_rcp = new TH1F("haxis_rcp", 
-                             ";x (x_{jet}=2 * p_{T}^{jet} / #sqrt{s_{NN}});R_{CP}",
+  TH1F* haxis_rcp = new TH1F("haxis_rcp",
+                             Form(";x (x_{jet}=2 * p_{T}^{jet} / #sqrt{s_{NN}});R_{CP}(0-%.0f%% / %.0f-100%%)",
+                                  dcent_cent * 100, (1 - dcent_periph) * 100),
                              100, 0, 1);
   haxis_rcp->SetMinimum(0);
   haxis_rcp->SetMaximum(1.1);
+
+  TLegend *leg = new TLegend(0.55, 0.65, 0.85, 0.83);
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    leg->AddEntry(grcp[isys], collSystem[isys], "L");
+
+  TLine l1;
+  l1.SetLineStyle(2);
+
+  TH1F* haxis_rcpcent = new TH1F("haxis_rcpcent",
+                                 ";centrality; R",
+                                 NCENT, 0, NCENT - 1);
+  haxis_rcpcent->SetMinimum(0);
+  haxis_rcpcent->SetMaximum(2.0);
+  // haxis_rcpcent->GetXaxis()->SetNdivisions(NCENT);
+  for (int ibin = 1; ibin <= haxis_rcpcent->GetNbinsX(); ibin++)
+  {
+    haxis_rcpcent->GetXaxis()->SetBinLabel(ibin,
+                                           Form("%.0f - %.0f",
+                                               centl[ibin - 1],
+                                               centh[ibin - 1]));
+  }
+  haxis_rcpcent->LabelsOption("d");
+
+  TLegend *legx = new TLegend(0.6, 0.15, 0.9, 0.5);
+  legx->SetFillStyle(0);
+  legx->SetBorderSize(0);
+  for (int ix = 0; ix < NX; ix++)
+  {
+    legx->AddEntry(grcp_cent[0][ix], Form("x = %.2f", x[ix]), "L");
+  }
 
   //=====================================================//
   // PLOT
@@ -455,32 +526,56 @@ void calculate_RCP()
 
   TCanvas *crcp = new TCanvas("crcp", "RCP", 800, 800);
   crcp->cd(1);
-  haxis_rcp->GetXaxis()->SetRangeUser(0, 0.6);
+  haxis_rcp->GetXaxis()->SetRangeUser(0, 0.5);
   haxis_rcp->Draw();
-  grcp->Draw("L");
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    grcp[isys]->Draw("L");
 
   gRCP_jet->Draw("P");
   for (int i = 0; i < NJET; i++)
     bRcp_jet[i]->Draw();
 
+  l1.DrawLine(0, 1, 0.5, 1);
+  leg->Draw("same");
 
-  TCanvas *ctest = new TCanvas("ctest", "test", 1500, 500);
-  ctest->Divide(2, 1);
 
-  ctest->cd(1);
-  gPad->SetLogy();
-  hNcoll[0]->Draw();
-  for (int ix = 1; ix < NX; ix++)
-    hNcoll[ix]->Draw("same");
-  legNcoll->Draw("same");
-  label.DrawLatex(0.5, 0.95, collSystem);
+  TCanvas *ctest = new TCanvas("ctest", "test", 2000, 1000);
+  ctest->Divide(2, NSYSTEMS);
 
-  ctest->cd(2);
-  gPad->SetLogy();
-  hBBCs[0]->Draw();
-  for (int ix = 1; ix < NX; ix++)
-    hBBCs[ix]->Draw("same");
-  label.DrawLatex(0.5, 0.95, collSystem);
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+  {
+    ctest->cd(2 * isys + 1);
+    gPad->SetLogy();
+    hNcoll[isys][0]->Draw();
+    for (int ix = 1; ix < NX; ix++)
+      hNcoll[isys][ix]->Draw("same");
+    legNcoll[isys]->Draw("same");
+    label.DrawLatex(0.5, 0.95, collSystem[isys]);
+
+    ctest->cd(2 * isys + 2);
+    gPad->SetLogy();
+    hBBCs[isys][0]->Draw();
+    for (int ix = 1; ix < NX; ix++)
+      hBBCs[isys][ix]->Draw("same");
+    label.DrawLatex(0.5, 0.95, collSystem[isys]);
+  }
+
+  TCanvas *crcpcent = new TCanvas("crcpcent", "rcp cent", 1200, 600);
+  crcpcent->Divide(NSYSTEMS, 1);
+
+
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+  {
+    crcpcent->GetPad(isys + 1)->SetTicks(1, 1);
+    crcpcent->cd(isys + 1);
+    haxis_rcpcent->Draw();
+    for (int ix = 0; ix < NX; ix++)
+      grcp_cent[isys][ix]->Draw("L");
+
+    l1.DrawLine(0, 1, NCENT-1, 1);
+    label.DrawLatex(0.5, 0.95, collSystem[isys]);
+    if (isys == NSYSTEMS - 1) legx->Draw("same");
+  }
 
   //=====================================================//
   // SAVE
@@ -490,13 +585,14 @@ void calculate_RCP()
     cout << endl;
     cout << "--> Saving RCP to " << outFile << endl;
 
-    ctest->Print(Form("NcollBBCcharge_%s.pdf", collSystem));
-    crcp->Print(Form("Rcp_%s.pdf", collSystem));
+    ctest->Print("NcollBBCcharge.pdf");
+    crcp->Print("Rcp_systems.pdf");
+    crcpcent->Print("R_systems.pdf");
 
-    TFile *fout = new TFile(outFile, "UPDATE");
+    // TFile *fout = new TFile(outFile, "UPDATE");
 
-    grcp->Write(Form("Rcp_%s", collSystem));
+    // grcp->Write(Form("Rcp_%s", collSystem));
 
-    fout->Close();
+    // fout->Close();
   }
 }
