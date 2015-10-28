@@ -1,0 +1,10 @@
+// ignored build files
+*.d
+*.so
+*.pcm
+
+// ignore glauber root files
+rootfiles/*
+
+// ignore pdfs
+*.pdf
