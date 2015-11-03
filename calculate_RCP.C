@@ -37,6 +37,7 @@
 #include <TLine.h>
 
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -198,22 +199,22 @@ void calculate_RCP()
 
       hNcollMod_BBCsc[i][j] = new TH2D(Form("hNcollMod_BBCsc_%i_%i", i, j),
                                        ";BBCs charge; N_{coll}^{mod}",
-                                       1200, 0, 400,
+                                       1596, 1, 400,
                                        101, -0.5, 100.5);
 
       hNcoll_BBCsc[i][j] = new TH2D(Form("hNcoll_BBCsc_%i_%i", i, j),
                                     ";BBCs charge; N_{coll}",
-                                    1200, 0, 400,
+                                    1596, 1, 400,
                                     101, -0.5, 100.5);
 
       hNcollMod_BBCscMod[i][j] = new TH2D(Form("hNcollMod_BBCscMod_%i_%i", i, j),
                                           ";BBCs charge Mod; N_{coll}^{mod}",
-                                          1200, 0, 400,
+                                          1596, 1, 400,
                                           101, -0.5, 100.5);
 
       hNcoll_BBCscMod[i][j] = new TH2D(Form("hNcoll_BBCscMod_%i_%i", i, j),
                                        ";BBCs charge Mod; N_{coll}",
-                                       1200, 0, 400,
+                                       1596, 1, 400,
                                        101, -0.5, 100.5);
 
     }
@@ -612,6 +613,7 @@ void calculate_RCP()
   cout << endl;
   cout << "--> Printing ... " << endl;
 
+  cout << setprecision(2) << fixed;
   cout << endl;
   cout << " ncoll MB " << endl;
   cout << "x";
