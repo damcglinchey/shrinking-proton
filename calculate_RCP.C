@@ -40,15 +40,14 @@
 
 using namespace std;
 
-Double_t NBD(Double_t *x, Double_t *par)
+double evalNBD(double n, double mu, double k)
 {
   // Negative Binomial Distribution
   double P = 0;
-  double n = x[0];
-  double mu = par[0];
-  double k = par[1];
 
-  if (n + k > 100.0) {
+  if (mu < 0 || k < 0) {
+    P = 0;
+  } else if (n + k > 100.0) {
     // log method for handling large numbers
     P  = TMath::LnGamma(n + k) - TMath::LnGamma(n + 1.) - TMath::LnGamma(k);
     P  += n * TMath::Log(mu / k) - (n + k) * TMath::Log(1.0 + mu / k);
@@ -60,6 +59,7 @@ Double_t NBD(Double_t *x, Double_t *par)
   }
   return P;
 }
+
 
 void calculate_RCP()
 {
@@ -223,7 +223,7 @@ void calculate_RCP()
   TH1D* htmp;
 
   // NBD
-  TF1 *fNBD = new TF1("fNBD", NBD, 0, 200, 2);
+  // TF1 *fNBD = new TF1("fNBD", NBD, 0, 200, 2);
 
   // trigger efficiencies
   TF1 *ftrigeff = new TF1("ftrigeff", "1.0-TMath::Exp(-pow((x/[0]), [1]))", 0.0, 200.0);
@@ -326,39 +326,29 @@ void calculate_RCP()
           float Ncoll = hNcoll_NcollMod[isys][ix]->GetYaxis()->GetBinCenter(iby);
           float NcollMod = hNcoll_NcollMod[isys][ix]->GetXaxis()->GetBinCenter(ibx);
 
+          if (w <= 0) continue;
 
-          if (w > 0)
+          for (int j = 1; j <= hNcoll_BBCsc[isys][ix]->GetNbinsX(); j++)
           {
-            // Unmodified BBCs charge
-            fNBD->SetParameters(Ncoll * NBD_par[isys][0], Ncoll * NBD_par[isys][1]);
-            for (int j = 1; j <= hNcoll_BBCsc[isys][ix]->GetNbinsX(); j++)
+            double c = hNcoll_BBCsc[isys][ix]->GetXaxis()->GetBinCenter(j);
+            double NBD = evalNBD(c, Ncoll * NBD_par[isys][0],
+                                 Ncoll * NBD_par[isys][1]);
+            double NBDMod = evalNBD(c, NcollMod * NBD_par[isys][0],
+                                    NcollMod * NBD_par[isys][1]);
+            double eff = ftrigeff->Eval(c);
+
+            // NBD=nan for mu/k = 0
+            if (Ncoll > 0)
             {
-              double c = hNcoll_BBCsc[isys][ix]->GetXaxis()->GetBinCenter(j);
-              double bc = hNcoll_BBCsc[isys][ix]->GetBinContent(j, iby);
-              double bcMod = hNcollMod_BBCsc[isys][ix]->GetBinContent(j, ibx);
-              double eff = ftrigeff->Eval(c);
-
-              double v = w * fNBD->Eval(c) * eff;
-
-              hNcoll_BBCsc[isys][ix]->SetBinContent(j, iby, v + bc);
-              hNcollMod_BBCsc[isys][ix]->SetBinContent(j, ibx, v + bcMod);
+              hNcoll_BBCsc[isys][ix]->Fill(c, Ncoll, w * NBD * eff);
+              hNcollMod_BBCsc[isys][ix]->Fill(c, NcollMod, w * NBD * eff);
             }
-
-            // Modified BBCs charge
-            fNBD->SetParameters(NcollMod * NBD_par[isys][0], NcollMod * NBD_par[isys][1]);
-            for (int j = 1; j <= hNcoll_BBCscMod[isys][ix]->GetNbinsX(); j++)
+            if (NcollMod > 0)
             {
-              double c = hNcoll_BBCscMod[isys][ix]->GetXaxis()->GetBinCenter(j);
-              double bc = hNcoll_BBCscMod[isys][ix]->GetBinContent(j, iby);
-              double bcMod = hNcollMod_BBCscMod[isys][ix]->GetBinContent(j, ibx);
-              double eff = ftrigeff->Eval(c);
-
-              double v = w * fNBD->Eval(c) * eff;
-
-              hNcoll_BBCscMod[isys][ix]->SetBinContent(j, iby, v + bc);
-              hNcollMod_BBCscMod[isys][ix]->SetBinContent(j, ibx, v + bcMod);
+              hNcoll_BBCscMod[isys][ix]->Fill(c, Ncoll, w * NBDMod * eff);
+              hNcollMod_BBCscMod[isys][ix]->Fill(c, NcollMod, w * NBDMod * eff);
             }
-          } // if
+          } // j
         } // iby
       } // ibx
 
@@ -383,96 +373,65 @@ void calculate_RCP()
       int nq = 2;
       double xq[2];
       double yq[2] = {0};
-      // xq[0] = dcent_periph[isys];
-      // xq[1] = 1. - dcent_cent[isys];
       xq[0] = dcent_periph[isys] / cent_tot[isys];
       xq[1] = (cent_tot[isys] - dcent_cent[isys]) / cent_tot[isys];
       hBBCs[isys][ix]->GetQuantiles(nq, yq, xq);
       cout << " quantiles: " << yq[0] << " " << yq[1] << endl;
 
-      // get bin values for each quantile
-      int bq[2];
-      for (int i = 0; i < 2; i++)
-        bq[i] = hBBCs[isys][ix]->FindBin(yq[i]);
+      // get bin limits for each quantile
+      int blim[2][2];
+      // central
+      blim[0][0] = hBBCs[isys][ix]->FindBin(yq[1]);
+      blim[0][1] = hBBCs[isys][ix]->GetNbinsX();
+      // peripheral
+      blim[1][0] = 1;
+      blim[1][1] = hBBCs[isys][ix]->FindBin(yq[0]);
 
-      cout << " bq[0]: " << bq[0] << " " << hBBCs[isys][ix]->GetBinLowEdge(bq[0] + 1) << endl;
-      cout << " bq[1]: " << bq[1] << " " << hBBCs[isys][ix]->GetBinLowEdge(bq[1]) << endl;
+      cout << "  blim[0]: [" << blim[0][0] << ", " << blim[0][1] << "]"
+           << " -> [" << hBBCs[isys][ix]->GetBinLowEdge(blim[0][0]) << ","
+           << hBBCs[isys][ix]->GetBinLowEdge(blim[0][1] + 1) << "]"
+           << endl;
+      cout << "  blim[1]: [" << blim[1][0] << ", " << blim[1][1] << "]"
+           << " -> [" << hBBCs[isys][ix]->GetBinLowEdge(blim[1][0]) << ","
+           << hBBCs[isys][ix]->GetBinLowEdge(blim[1][1] + 1) << "]"
+           << endl;
 
-      // Calculate the unmodified number of events
+
       double Nevent[2];
-      Nevent[0] = hBBCs[isys][ix]->Integral(
-                    bq[1],
-                    hBBCs[isys][ix]->GetNbinsX());
-
-      Nevent[1] = hBBCs[isys][ix]->Integral(
-                    1,
-                    hBBCs[isys][ix]->FindBin(yq[0]));
-
-      // Calculate the number of modified events
       double NeventMod[2];
-      NeventMod[0] = hBBCsMod[isys][ix]->Integral(
-                       hBBCsMod[isys][ix]->FindBin(yq[1]),
-                       hBBCsMod[isys][ix]->GetNbinsX());
-
-      NeventMod[1] = hBBCsMod[isys][ix]->Integral(
-                       1,
-                       hBBCsMod[isys][ix]->FindBin(yq[0]));
-
-
-      // Project the unmodified Ncoll (unmodified BBCs charge)
-      hNcoll[isys][ix][0] = (TH1D*) hNcoll_BBCsc[isys][ix]->ProjectionY(
-                              Form("hNcoll_%i_%i_0", isys, ix),
-                              bq[1],
-                              hBBCs[isys][ix]->GetNbinsX());
-      hNcoll[isys][ix][0]->SetDirectory(0);
-
-      hNcoll[isys][ix][1] = (TH1D*) hNcoll_BBCsc[isys][ix]->ProjectionY(
-                              Form("hNcoll_%i_%i_1", isys, ix),
-                              1,
-                              bq[0]);
-
-      // Project the modified Ncoll (unmodified BBCs charge)
-      hNcollMod[isys][ix][0] = (TH1D*) hNcollMod_BBCsc[isys][ix]->ProjectionY(
-                                 Form("hNcollMod_%i_%i_0", isys, ix),
-                                 bq[1],
-                                 hBBCs[isys][ix]->GetNbinsX());
-
-      hNcollMod[isys][ix][1] = (TH1D*) hNcollMod_BBCsc[isys][ix]->ProjectionY(
-                                 Form("hNcollMod_%i_%i_1", isys, ix),
-                                 1,
-                                 bq[0]);
-
-      // Project the unmodified Ncoll (modified BBCs charge)
-      hNcollBBCscMod[isys][ix][0] = (TH1D*) hNcoll_BBCscMod[isys][ix]->ProjectionY(
-                                      Form("hNcollBBCscMod_%i_%i_0", isys, ix),
-                                      bq[1],
-                                      hBBCs[isys][ix]->GetNbinsX());
-
-      hNcollBBCscMod[isys][ix][1] = (TH1D*) hNcoll_BBCscMod[isys][ix]->ProjectionY(
-                                      Form("hNcollBBCscMod_%i_%i_1", isys, ix),
-                                      1,
-                                      bq[0]);
-
-      // Project the modified Ncoll for modified BBCs charge)
-      hNcollModBBCscMod[isys][ix][0] = (TH1D*) hNcollMod_BBCscMod[isys][ix]->ProjectionY(
-                                         Form("hNcollModBBCscMod_%i_%i_0", isys, ix),
-                                         bq[1],
-                                         hBBCs[isys][ix]->GetNbinsX());
-
-      hNcollModBBCscMod[isys][ix][1] = (TH1D*) hNcollMod_BBCscMod[isys][ix]->ProjectionY(
-                                         Form("hNcollModBBCscMod_%i_%i_1", isys, ix),
-                                         1,
-                                         bq[0]);
-
-
-      // Calculate the bias factors and Rcp
       double yield[2] = {0};
       double yield_NcollMod[2] = {0};
       double yield_BBCscMod[2] = {0};
       double yield_NcollModBBCscMod[2] = {0};
 
-      for (int iq = 0; iq < nq; iq++)
+
+      for (int iq = 0; iq < 2; iq++)
       {
+        // Calculate the unmodified number of events
+        Nevent[iq] = hBBCs[isys][ix]->Integral(blim[iq][0], blim[iq][1]);
+
+        // Calculate the number of modified events
+        NeventMod[iq] = hBBCsMod[isys][ix]->Integral(blim[iq][0], blim[iq][1]);
+
+        // Project the unmodified Ncoll (unmodified BBCs charge)
+        hNcoll[isys][ix][iq] = (TH1D*) hNcoll_BBCsc[isys][ix]->ProjectionY(
+                                 Form("hNcoll_%i_%i_%i", isys, ix, iq),
+                                 blim[iq][0], blim[iq][1]);
+
+        // Project the modified Ncoll (unmodified BBCs charge)
+        hNcollMod[isys][ix][iq] = (TH1D*) hNcollMod_BBCsc[isys][ix]->ProjectionY(
+                                    Form("hNcollMod_%i_%i_%i", isys, ix, iq),
+                                    blim[iq][0], blim[iq][1]);
+
+        // Project the unmodified Ncoll (modified BBCs charge)
+        hNcollBBCscMod[isys][ix][iq] = (TH1D*) hNcoll_BBCscMod[isys][ix]->ProjectionY(
+                                         Form("hNcollBBCscMod_%i_%i_%i", isys, ix, iq),
+                                         blim[iq][0], blim[iq][1]);
+
+        // Project the modified Ncoll for modified BBCs charge)
+        hNcollModBBCscMod[isys][ix][iq] = (TH1D*) hNcollMod_BBCscMod[isys][ix]->ProjectionY(
+                                            Form("hNcollModBBCscMod_%i_%i_%i", isys, ix, iq),
+                                            blim[iq][0], blim[iq][1]);
 
         // Calculate yields (Ncoll weighted)
         for (int ib = 1; ib <= hNcoll[isys][ix][iq]->GetNbinsX(); ib++)
@@ -496,14 +455,15 @@ void calculate_RCP()
         bias_NcollModBBCcsMod[isys][ix][iq] = yield_NcollModBBCscMod[iq] / NeventMod[iq];
         bias_NcollModBBCcsMod[isys][ix][iq] /= yield[iq] / Nevent[iq];
 
-        // Calculate Rcp
-        rcp_BBCscMod[isys][ix] = bias_BBCcsMod[isys][ix][0] / bias_BBCcsMod[isys][ix][1];
+      } // iq
 
-        rcp_NcollMod[isys][ix] = bias_NcollMod[isys][ix][0] / bias_NcollMod[isys][ix][1];
+      // Calculate Rcp
+      rcp_BBCscMod[isys][ix] = bias_BBCcsMod[isys][ix][0] / bias_BBCcsMod[isys][ix][1];
 
-        rcp_NcollModBBCscMod[isys][ix] = bias_NcollModBBCcsMod[isys][ix][0] / bias_NcollModBBCcsMod[isys][ix][1];
+      rcp_NcollMod[isys][ix] = bias_NcollMod[isys][ix][0] / bias_NcollMod[isys][ix][1];
 
-      }
+      rcp_NcollModBBCscMod[isys][ix] = bias_NcollModBBCcsMod[isys][ix][0] / bias_NcollModBBCcsMod[isys][ix][1];
+
 
 
       cout << " x: " << x[ix] << endl;
@@ -667,6 +627,52 @@ void calculate_RCP()
     cout << x[ix];
     for (int isys = 0; isys < NSYSTEMS; isys++)
       cout << " " << hNcollMod_MB[isys][ix]->GetMean();
+    cout << endl;
+  }
+
+  cout << endl;
+  cout << " ncoll cent ncoll periph " << endl;
+  cout << "x sig(x)";
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << collSystem[isys];
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << collSystem[isys];
+  cout << endl;
+  cout << "0.00 42.0";
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << hNcoll[isys][0][0]->GetMean();
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << hNcoll[isys][0][1]->GetMean();
+  cout << endl;
+  for (int ix = 0; ix < NX; ix++)
+  {
+    cout << x[ix];
+    cout << " " << 42*TMath::Exp(-8.0 * x[ix]);
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+      cout << " " << hNcollBBCscMod[isys][ix][0]->GetMean();
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+      cout << " " << hNcollBBCscMod[isys][ix][1]->GetMean();
+    cout << endl;
+  }
+
+
+  cout << endl;
+  cout << " Bias(0-20%) & Bias(60-88%)" << endl;
+  cout << "x sig(x)";
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << collSystem[isys];
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << collSystem[isys];
+  cout << endl;
+  cout << endl;
+  for (int ix = 0; ix < NX; ix++)
+  {
+    cout << x[ix];
+    cout << " " << 42*TMath::Exp(-8.0 * x[ix]);
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+      cout << " " << bias_BBCcsMod[isys][ix][0];
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+      cout << " " << bias_BBCcsMod[isys][ix][1];
     cout << endl;
   }
 
