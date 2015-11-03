@@ -32,3 +32,14 @@ To run the Glauber MC for 1k p+Au collisions with x=0.1:
     root [3] 
 
 ## calculate_RCP_dAuJet.C ##
+
+This code calculates the ratio of the bias factors in 0-20% / 60-88% for a direct comparison with the PHENIX Run 8 d+Au Jet R_{CP} ([arXiv:1509.04657](http://inspirehep.net/search?p=find+eprint+1509.04657))
+
+It uses a set of generated Glauber output trees for different `x` values, defined at the beginning of the code.
+
+
+## calculate_RCP.C ##
+
+This code calculates the ratio of bias factors in different centrality bins for a set of systems (p+Au, d+Au, 3He+Au).
+
+It uses a set of arrays defined at the beginning of the function for choosing `x` values, systems, and Glauber ROOT files.
