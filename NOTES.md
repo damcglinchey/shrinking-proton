@@ -5,10 +5,10 @@ PHOBOS MC Glauber NOTES - Started Oct 14 2015
 ## Setup ##
 
 Downloaded the source from
-`https://www.hepforge.org/downloads/tglaubermc`
+[hepforge](https://www.hepforge.org/downloads/tglaubermc)
 
 See the reference documentation at
-`http://arxiv.org/pdf/1408.2549v2.pdf`
+[arXiv:1408.2549](http://arxiv.org/pdf/1408.2549v2.pdf)
 
 Note that the code does not compile with ROOT 6 out of the box. To avoid dealing with the compile issues (not clear to me), I also installed ROOT v5.34.34. Can access it by running the command `root5`. All subsequent ROOT sessions will also be ROOT 5.
 
@@ -25,30 +25,53 @@ Jamie has an initial centrality callibration explained here:
 Best NBD parameters:
 
     mu = 3.14
-    k = 0.47
+    k  = 0.47
 
 Trigger efficiency: 84% of inelastic c.s.
 
-Looking at the centrality categorization we get approximately
+Efficiency parameters (`1.0-TMath::Exp(-pow((x/[0]), [1]))`) from Jamie:
 
-    [0-5%]   BBCs charge > 50
-    [0-10%]  BBCs charge > 38
-    [0-20%]  BBCs charge > 27
-    [60-84%] BBCs charge < 7.5
-    [70-84%] BBCs charge < 4.5
+    1.07552e+00, 6.02328e-01
 
+When running with the Glauber, run with "p", "Au"
+
+## d+Au 200 GeV ##
+
+References: [AN980](http://www.phenix.bnl.gov/phenix/WWW/p/info/an/900/Run8_dAu_200GeV_Centrality_Categorization.pdf), [AN1087](http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1087/Run8_dAu_200GeV_Centrality_Addendum-01.pdf), [PPG160](http://journals.aps.org/prc/pdf/10.1103/PhysRevC.90.034902)
+
+Best NBD parameters:
+
+    mu = 3.04
+    k  = 0.46
+
+Trigger efficiency: 88% of inelastic c.s.
+
+Efficiency parameters from my [thesis](http://www.phenix.bnl.gov/phenix/WWW/talk/archive/theses/2012/McGlinchey_Darren-McGlinchey_C_Dissertation_2012.pdf):
+
+    0.897, 0.612
+
+When running with the Glauber, run with "dh", "Au"
+
+## 3He+Au 200 GeV ##
+
+References: [AN1207](http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1207/Run14_3HeAu_200GeV_Centrality_Categorization.pdf)
+
+Best NBD parameters:
+
+    mu = 2.91
+    k  = 0.55
+
+Trigger efficiency: 88% of inelastic c.s.
+
+Efficiency parameters from Jamie:
+
+    1.22134e+00, 5.10114e-01
+
+When running with the Glauber, run with "He3", "Au"
 
 
 Proton size fluctuation NOTES - Started Oct 15 2015
 ===================================================
-
-## Relation between pT and x ##
-
-    x = sqrt(M^2 + pT^2) / sqrt(s) * exp(-y)
-
-for pions assume M=0, and y=0 so
-
-    x = pT / sqrt(s) = pT / 200 
 
 
 ## Modifying the nucleon-nucleon cross section ##
@@ -58,15 +81,8 @@ If you have a collision with a high-x parton in the projectile (p, d, He3), prod
 Try modeling this in the glauber model as:
 
 **Temporary**
-    sigma_nn(x) = sigma_nn * (1-x)
+    sigma_nn(x) = sigma_nn * e^{-8*x}
 
 ## Modifying the PHOBOS glauber to include this possibility ##
 
 
-## Run a grid of pion pT values ##
-
-    pion pT    x     sigma_nn(x)/sigma_nn
-    5        0.025         0.975
-    10       0.05          0.950
-    15       0.075         0.925
-    20       0.1           0.900
