@@ -72,11 +72,8 @@ void calculate_RCP()
   // SET RUNNING CONDITIONS
   //=====================================================//
 
-  const int NX = 11;             // Number of x values
-  double x[] = {0.01, 0.05, 0.10, 0.15, 0.20,
-                0.25, 0.30, 0.35, 0.40, 0.45,
-                0.50
-               };         // x values
+  const int NX = 4;             // Number of x values
+  double x[] = {0.01, 0.10, 0.30, 0.50};
 
   const int NSYSTEMS = 3;
   const char *collSystem[] = {"pAu", "dAu", "3HeAu"};
@@ -89,41 +86,20 @@ void calculate_RCP()
   {
     { // pAu Files
       "rootfiles/glauber_pau_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x005_ntuple_100k.root",
       "rootfiles/glauber_pau_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x025_ntuple_100k.root",
       "rootfiles/glauber_pau_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x045_ntuple_100k.root",
       "rootfiles/glauber_pau_snn42_x05_ntuple_100k.root",
     },
     { // dAu Files
       "rootfiles/glauber_dau_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x005_ntuple_100k.root",
       "rootfiles/glauber_dau_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x025_ntuple_100k.root",
       "rootfiles/glauber_dau_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x045_ntuple_100k.root",
       "rootfiles/glauber_dau_snn42_x05_ntuple_100k.root",
     },
     { // He3Au Files
       "rootfiles/glauber_he3au_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x005_ntuple_100k.root",
       "rootfiles/glauber_he3au_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x025_ntuple_100k.root",
       "rootfiles/glauber_he3au_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x045_ntuple_100k.root",
       "rootfiles/glauber_he3au_snn42_x05_ntuple_100k.root",
     },
 
@@ -192,6 +168,11 @@ void calculate_RCP()
   TH2D *hNcoll_BBCsc[NSYSTEMS][NX];
   TH2D *hNcollMod_BBCscMod[NSYSTEMS][NX];
   TH2D *hNcoll_BBCscMod[NSYSTEMS][NX];
+
+  TH1D *hBBCscNcoll[NSYSTEMS][NX];
+  TH1D* hBBCscModNcoll[NSYSTEMS][NX];
+  TH1D *hBBCscNcollMod[NSYSTEMS][NX];
+  TH1D *hBBCscModNcollMod[NSYSTEMS][NX];
   for (int i = 0; i < NSYSTEMS; i++)
   {
     for (int j = 0; j < NX; j++)
@@ -216,6 +197,23 @@ void calculate_RCP()
                                        ";BBCs charge Mod; N_{coll}",
                                        1596, 1, 400,
                                        101, -0.5, 100.5);
+
+      // Ncoll weighted BBC charge distributions
+      hBBCscNcoll[i][j] = new TH1D(Form("hBBCscNcoll_%i_%i", i, j),
+                                   ";N_{coll} #time BBCs charge",
+                                   1596, 1, 400);
+
+      hBBCscModNcoll[i][j] = new TH1D(Form("hBBCscModNcoll_%i_%i", i, j),
+                                      ";N_{coll} #time BBCs charge Mod",
+                                      1596, 1, 400);
+
+      hBBCscNcollMod[i][j] = new TH1D(Form("hBBCscNcollMod_%i_%i", i, j),
+                                      ";N_{coll}^{mod} #time BBCs charge",
+                                      1596, 1, 400);
+
+      hBBCscModNcollMod[i][j] = new TH1D(Form("hBBCscModNcollMod_%i_%i", i, j),
+                                         ";N_{coll}^{mod} #time BBCs charge Mod",
+                                         1596, 1, 400);
 
     }
   }
@@ -253,6 +251,18 @@ void calculate_RCP()
   double r_BBCscMod_cent[NSYSTEMS][NX][NCENT];
   TGraph *gr_BBBCscMod_cent[NSYSTEMS][NX];
 
+
+  // alt
+  double altyield_BBCscNcoll[NSYSTEMS][NX][2];
+  double altyield_BBCscModNcoll[NSYSTEMS][NX][2];
+  double altyield_BBCscModNcollMod[NSYSTEMS][NX][2];
+
+  double altrcp_BBCscNcoll[NSYSTEMS][NX];
+  double altrcp_BBCscModNcoll[NSYSTEMS][NX];
+  double altrcp_BBCscModNcollMod[NSYSTEMS][NX];
+
+  TGraph *galtrcp_BBCscModNcoll[NSYSTEMS];
+  TGraph *galtrcp_BBCscModNcollMod[NSYSTEMS];
 
   //=====================================================//
   // GET NTUPLE(S) FROM FILE AND CALCULATE YIELD
@@ -336,18 +346,25 @@ void calculate_RCP()
                                  Ncoll * NBD_par[isys][1]);
             double NBDMod = evalNBD(c, NcollMod * NBD_par[isys][0],
                                     NcollMod * NBD_par[isys][1]);
-            double eff = ftrigeff->Eval(c);
+            // double eff = ftrigeff->Eval(c);
+            double eff = 1;
 
             // NBD=nan for mu/k = 0
             if (Ncoll > 0)
             {
               hNcoll_BBCsc[isys][ix]->Fill(c, Ncoll, w * NBD * eff);
               hNcollMod_BBCsc[isys][ix]->Fill(c, NcollMod, w * NBD * eff);
+
+              hBBCscNcoll[isys][ix]->Fill(c, Ncoll * w * NBD * eff);
+              hBBCscNcollMod[isys][ix]->Fill(c, NcollMod * w * NBD * eff);
             }
             if (NcollMod > 0)
             {
               hNcoll_BBCscMod[isys][ix]->Fill(c, Ncoll, w * NBDMod * eff);
               hNcollMod_BBCscMod[isys][ix]->Fill(c, NcollMod, w * NBDMod * eff);
+
+              hBBCscModNcoll[isys][ix]->Fill(c, Ncoll * w * NBDMod * eff);
+              hBBCscModNcollMod[isys][ix]->Fill(c, NcollMod * w * NBDMod * eff);
             }
           } // j
         } // iby
@@ -456,7 +473,28 @@ void calculate_RCP()
         bias_NcollModBBCcsMod[isys][ix][iq] = yield_NcollModBBCscMod[iq] / NeventMod[iq];
         bias_NcollModBBCcsMod[isys][ix][iq] /= yield[iq] / Nevent[iq];
 
+
+        // Alternate calculation of the bias
+        altyield_BBCscNcoll[isys][ix][iq] = hBBCscNcoll[isys][ix]->Integral(blim[iq][0], blim[iq][1]);
+        altyield_BBCscModNcoll[isys][ix][iq] = hBBCscModNcoll[isys][ix]->Integral(blim[iq][0], blim[iq][1]);
+        altyield_BBCscModNcollMod[isys][ix][iq] = hBBCscModNcollMod[isys][ix]->Integral(blim[iq][0], blim[iq][1]);
+
+        cout << " alt[" << isys << "][" << ix << "][" << iq << "]: "
+             << hBBCscNcoll[isys][ix]->Integral(blim[iq][0], blim[iq][1]) << " "
+             << hBBCscModNcoll[isys][ix]->Integral(blim[iq][0], blim[iq][1]) << " "
+             << hBBCscModNcollMod[isys][ix]->Integral(blim[iq][0], blim[iq][1]) << " "
+             << endl;
+
+
       } // iq
+
+      // alt rcp
+      altrcp_BBCscModNcoll[isys][ix] = altyield_BBCscModNcoll[isys][ix][0] / altyield_BBCscNcoll[isys][ix][0];
+      altrcp_BBCscModNcoll[isys][ix] /= altyield_BBCscModNcoll[isys][ix][1] / altyield_BBCscNcoll[isys][ix][1];
+
+      altrcp_BBCscModNcollMod[isys][ix] = altyield_BBCscModNcollMod[isys][ix][0] / altyield_BBCscNcoll[isys][ix][0];
+      altrcp_BBCscModNcollMod[isys][ix] /= altyield_BBCscModNcollMod[isys][ix][1] / altyield_BBCscNcoll[isys][ix][1];
+
 
       // Calculate Rcp
       rcp_BBCscMod[isys][ix] = bias_BBCcsMod[isys][ix][0] / bias_BBCcsMod[isys][ix][1];
@@ -603,6 +641,20 @@ void calculate_RCP()
     // grcp_NcollModBBCscMod->SetLineWidth(2);
     // grcp_NcollModBBCscMod->SetLineColor(kRed);
 
+    galtrcp_BBCscModNcoll[isys] = new TGraph(NX, x, altrcp_BBCscModNcoll[isys]);
+    galtrcp_BBCscModNcoll[isys]->SetName(Form("galtrcp_BBCscModNcoll_%i", isys));
+    galtrcp_BBCscModNcoll[isys]->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+    galtrcp_BBCscModNcoll[isys]->SetLineStyle(1);
+    galtrcp_BBCscModNcoll[isys]->SetLineWidth(2);
+    galtrcp_BBCscModNcoll[isys]->SetLineColor(colors[isys]);
+
+    galtrcp_BBCscModNcollMod[isys] = new TGraph(NX, x, altrcp_BBCscModNcollMod[isys]);
+    galtrcp_BBCscModNcollMod[isys]->SetName(Form("galtrcp_BBCscModNcollMod_%i", isys));
+    galtrcp_BBCscModNcollMod[isys]->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+    galtrcp_BBCscModNcollMod[isys]->SetLineStyle(1);
+    galtrcp_BBCscModNcollMod[isys]->SetLineWidth(2);
+    galtrcp_BBCscModNcollMod[isys]->SetLineColor(colors[isys]);
+
 
 
   } // isys
@@ -649,7 +701,7 @@ void calculate_RCP()
   for (int ix = 0; ix < NX; ix++)
   {
     cout << x[ix];
-    cout << " " << 42*TMath::Exp(-8.0 * x[ix]);
+    cout << " " << 42 * TMath::Exp(-8.0 * x[ix]);
     for (int isys = 0; isys < NSYSTEMS; isys++)
       cout << " " << hNcollBBCscMod[isys][ix][0]->GetMean();
     for (int isys = 0; isys < NSYSTEMS; isys++)
@@ -670,13 +722,74 @@ void calculate_RCP()
   for (int ix = 0; ix < NX; ix++)
   {
     cout << x[ix];
-    cout << " " << 42*TMath::Exp(-8.0 * x[ix]);
+    cout << " " << 42 * TMath::Exp(-8.0 * x[ix]);
     for (int isys = 0; isys < NSYSTEMS; isys++)
       cout << " " << bias_BBCcsMod[isys][ix][0];
     for (int isys = 0; isys < NSYSTEMS; isys++)
       cout << " " << bias_BBCcsMod[isys][ix][1];
     cout << endl;
   }
+
+  cout << endl;
+  cout << "-- Ncoll * BBCscMod --" << endl;
+  cout << " Bias(0-20%) & Bias(60-88%)" << endl;
+  cout << "x sig(x)";
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << collSystem[isys];
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << collSystem[isys];
+  cout << endl;
+  cout << endl;
+  for (int ix = 0; ix < NX; ix++)
+  {
+    cout << x[ix];
+    cout << setw(7) << 42 * TMath::Exp(-8.0 * x[ix]) << " | ";
+    for (int iq = 0; iq < 2; iq++)
+    {
+      for (int isys = 0; isys < NSYSTEMS; isys++)
+        cout << setw(7) << altyield_BBCscModNcoll[isys][ix][iq] / altyield_BBCscNcoll[isys][ix][iq];
+      cout << " | ";
+    }
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+    {
+      double rcp = altyield_BBCscModNcoll[isys][ix][0] / altyield_BBCscNcoll[isys][ix][0];
+      rcp /= altyield_BBCscModNcoll[isys][ix][1] / altyield_BBCscNcoll[isys][ix][1];
+      cout << setw(7) << rcp;
+    }
+    cout << endl;
+  }
+
+  cout << endl;
+  cout << "-- NcollMod * BBCscMod --" << endl;
+  cout << " Bias(0-20%) & Bias(60-88%)" << endl;
+  cout << "x sig(x)";
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << collSystem[isys];
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    cout << " " << collSystem[isys];
+  cout << endl;
+  cout << endl;
+  for (int ix = 0; ix < NX; ix++)
+  {
+    cout << x[ix];
+    cout << setw(7) << 42 * TMath::Exp(-8.0 * x[ix]) << " | ";
+    for (int iq = 0; iq < 2; iq++)
+    {
+      for (int isys = 0; isys < NSYSTEMS; isys++)
+        cout << setw(7) << altyield_BBCscModNcollMod[isys][ix][iq] / altyield_BBCscNcoll[isys][ix][iq];
+      cout << " | ";
+    }
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+    {
+      double rcp = altyield_BBCscModNcollMod[isys][ix][0] / altyield_BBCscNcoll[isys][ix][0];
+      rcp /= altyield_BBCscModNcollMod[isys][ix][1] / altyield_BBCscNcoll[isys][ix][1];
+      cout << setw(7) << rcp;
+    }
+    cout << endl;
+  }
+
+
+
 
 
   //=====================================================//
@@ -797,7 +910,7 @@ void calculate_RCP()
   //   legx->AddEntry(grcp_cent[0][ix], Form("x = %.2f", x[ix]), "L");
   // }
 
-  int xplot = 5;
+  int xplot = 2;
 
   TLegend *legNcoll[NSYSTEMS][2];
   const char* centlabel[2] = {"0-20", "60-88"};
@@ -961,6 +1074,78 @@ void calculate_RCP()
     hBBCsMod[isys][xplot]->Draw("same");
     legBBC[isys]->Draw("same");
   }
+
+  TCanvas *cyield = new TCanvas("cyield", "yield", 1200, 400);
+  cyield->Divide(NSYSTEMS, 1, 0, 0);
+
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+  {
+    cyield->GetPad(isys + 1)->SetTopMargin(0.02);
+    cyield->GetPad(isys + 1)->SetRightMargin(0.02);
+    cyield->GetPad(isys + 1)->SetBottomMargin(0.10);
+    cyield->GetPad(isys + 1)->SetLeftMargin(0.10);
+    cyield->GetPad(isys + 1)->SetTicks(1, 1);
+
+
+    hBBCscNcoll[isys][xplot]->SetLineWidth(2);
+    hBBCscNcoll[isys][xplot]->SetLineColor(kBlue);
+    hBBCscModNcoll[isys][xplot]->SetLineColor(kRed);
+    hBBCscModNcollMod[isys][xplot]->SetLineColor(kGreen + 2);
+
+    hBBCscNcoll[isys][xplot]->GetXaxis()->SetRangeUser(0, 150);
+    hBBCscNcoll[isys][xplot]->GetYaxis()->SetRangeUser(1, 5e5);
+
+    cyield->cd(isys + 1);
+    gPad->SetLogy();
+    hBBCscNcoll[isys][xplot]->Draw("H");
+    hBBCscModNcoll[isys][xplot]->Draw("H same");
+    hBBCscModNcollMod[isys][xplot]->Draw("H same");
+    legBBC[isys]->Draw("same");
+  }
+
+
+  TCanvas *caltrcp = new TCanvas("caltrcp", "RCP", 800, 800);
+  caltrcp->Divide(2, 1);
+
+  caltrcp->GetPad(1)->SetTopMargin(0.02);
+  caltrcp->GetPad(1)->SetRightMargin(0.02);
+  caltrcp->GetPad(1)->SetBottomMargin(0.10);
+  caltrcp->GetPad(1)->SetLeftMargin(0.10);
+  caltrcp->GetPad(1)->SetTicks(1, 1);
+
+  caltrcp->GetPad(2)->SetTopMargin(0.02);
+  caltrcp->GetPad(2)->SetRightMargin(0.02);
+  caltrcp->GetPad(2)->SetBottomMargin(0.10);
+  caltrcp->GetPad(2)->SetLeftMargin(0.10);
+  caltrcp->GetPad(2)->SetTicks(1, 1);
+
+  caltrcp->cd(1);
+  haxis_rcp->GetXaxis()->SetRangeUser(0, 0.5);
+  haxis_rcp->Draw();
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    galtrcp_BBCscModNcoll[isys]->Draw("C");
+
+  gRCP_jet->Draw("P");
+  for (int i = 0; i < NJET; i++)
+    bRcp_jet[i]->Draw();
+
+  l1.DrawLine(0, 1, 0.5, 1);
+  leg->Draw("same");
+
+  caltrcp->cd(2);
+  haxis_rcp->GetXaxis()->SetRangeUser(0, 0.5);
+  haxis_rcp->Draw();
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+    galtrcp_BBCscModNcollMod[isys]->Draw("C");
+
+  gRCP_jet->Draw("P");
+  for (int i = 0; i < NJET; i++)
+    bRcp_jet[i]->Draw();
+
+  l1.DrawLine(0, 1, 0.5, 1);
+  leg->Draw("same");
+
+
 
   // TCanvas *crcpcent = new TCanvas("crcpcent", "rcp cent", 1200, 600);
   // crcpcent->Divide(NSYSTEMS, 1);
