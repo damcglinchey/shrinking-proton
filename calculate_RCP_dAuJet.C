@@ -28,6 +28,7 @@
 #include <TLine.h>
 
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -66,12 +67,14 @@ void calculate_RCP_dAuJet()
   //               0.25, 0.30, 0.35, 0.40, 0.45,
   //               0.50
   //              };         // x values
-  const int NX = 4;             // Number of x values
-  double x[] = {0.01, 0.10, 0.30, 0.50};
+  const int NX = 6;             // Number of x values
+  double x[] = {0.01, 0.10, 0.20, 0.30, 0.40, 0.50};
   const char *xFiles[] = {    // Files for each x value
     "rootfiles/glauber_dau_snn42_x001_ntuple_100k.root",
     "rootfiles/glauber_dau_snn42_x01_ntuple_100k.root",
+    "rootfiles/glauber_dau_snn42_x02_ntuple_100k.root",
     "rootfiles/glauber_dau_snn42_x03_ntuple_100k.root",
+    "rootfiles/glauber_dau_snn42_x04_ntuple_100k.root",
     "rootfiles/glauber_dau_snn42_x05_ntuple_100k.root",
   };
 
@@ -102,6 +105,8 @@ void calculate_RCP_dAuJet()
   Float_t Ncoll;
 
   TH2D *hNcoll_NcollMod[NX];
+  TH2D *hNcoll_NcollA[NX];
+  TH2D *hNcollMod_NcollModA[NX];
 
   // calculated histograms
   TH2D *hNcoll_BBCsc[NX];
@@ -110,9 +115,8 @@ void calculate_RCP_dAuJet()
 
   TH1D *hBBCsc[NX]; // unmodified BBC south charge for calculating cent limits
 
-  TH1D* hBBCscNcoll[NX];
-  TH1D* hBBCscModNcoll[NX];
-  TH1D* hBBCscModNcollMod[NX];
+  TH1D* hBBCscNcollA[NX];
+  TH1D* hBBCscModNcollModA[NX];
 
   for (int i = 0; i < NX; i++)
   {
@@ -139,17 +143,13 @@ void calculate_RCP_dAuJet()
 
 
     // Ncoll weighted BBC charge distributions
-    hBBCscNcoll[i] = new TH1D(Form("hBBCscNcoll_%i", i),
-                              ";N_{coll} #time BBCs charge",
-                              1596, 1, 400);
+    hBBCscNcollA[i] = new TH1D(Form("hBBCscNcollA_%i", i),
+                               ";N_{coll}(A) #time BBCs charge",
+                               1596, 1, 400);
 
-    hBBCscModNcoll[i] = new TH1D(Form("hBBCscModNcoll_%i", i),
-                                 ";N_{coll} #time BBCs charge Mod",
-                                 1596, 1, 400);
-
-    hBBCscModNcollMod[i] = new TH1D(Form("hBBCscModNcollMod_%i", i),
-                                    ";N_{coll}^{mod} #time BBCs charge Mod",
-                                    1596, 1, 400);
+    hBBCscModNcollModA[i] = new TH1D(Form("hBBCscModNcollModA_%i", i),
+                                     ";N_{coll}^{mod}(A) #time BBCs charge Mod",
+                                     1596, 1, 400);
 
 
   }
@@ -160,14 +160,9 @@ void calculate_RCP_dAuJet()
   TH1D* hNcoll[NX][2];
   TH1D* hNcollMod[NX][2];
 
-  double bias_BBCcsMod[NX][2];
-  double bias_NcollModBBCcsMod[NX][2];
-
-  double rcp_BBCscMod[NX];
-  double rcp_NcollModBBCscMod[NX];
-
-  TGraph *grcp_BBCscMod;
-  TGraph *grcp_NcollModBBCscMod;
+  double bias_NcollModABBCscMod[NX][2];
+  double rcp_NcollModABBCscMod[NX];
+  TGraph *grcp_NcollModABBCscMod;
 
   //=====================================================//
   // PRINT RUNNING CONDITIONS
@@ -213,6 +208,20 @@ void calculate_RCP_dAuJet()
     hNcoll_NcollMod[ix]->SetName(Form("hNcoll_NcollMod_%i", ix));
     hNcoll_NcollMod[ix]->SetTitle(";N_{coll}^{mod};N_{coll}");
 
+    ntp->Draw("Sum$(NcollA):NcollA[modA] >> htmp(101, -0.5, 100.5, 101, -0.5, 100.5)",
+              "", "goff");
+    hNcoll_NcollA[ix] = (TH2D*) gDirectory->FindObject("htmp");
+    hNcoll_NcollA[ix]->SetDirectory(0);
+    hNcoll_NcollA[ix]->SetName(Form("hNcoll_NcollA_%i", ix));
+    hNcoll_NcollA[ix]->SetTitle(";N_{coll}(A);N_{coll}");
+
+    ntp->Draw("Sum$(NcollModA):NcollModA[modA] >> htmp(101, -0.5, 100.5, 101, -0.5, 100.5)",
+              "", "goff");
+    hNcollMod_NcollModA[ix] = (TH2D*) gDirectory->FindObject("htmp");
+    hNcollMod_NcollModA[ix]->SetDirectory(0);
+    hNcollMod_NcollModA[ix]->SetName(Form("hNcollMod_NcollModA_%i", ix));
+    hNcollMod_NcollModA[ix]->SetTitle(";N_{coll}^{mod}(A);N_{coll}^{mod}");
+
     // we're done with the file, might as well close it
     delete ntp;
     fin->Close();
@@ -253,24 +262,58 @@ void calculate_RCP_dAuJet()
           if (Ncoll > 0)
           {
             hNcoll_BBCsc[ix]->Fill(c, Ncoll, w * NBD * eff);
-
             hBBCsc[ix]->Fill(c, w * NBD * eff);
-
-            hBBCscNcoll[ix]->Fill(c, Ncoll * w * NBD * eff);
           }
           // Modified BBCs charge
           if (NcollMod > 0)
           {
-            hNcoll_BBCscMod[ix]->Fill(c, Ncoll, w * NBDMod * eff);
             hNcollMod_BBCscMod[ix]->Fill(c, NcollMod, w * NBDMod * eff);
-
-            hBBCscModNcoll[ix]->Fill(c, Ncoll * w * NBDMod * eff);
-            hBBCscModNcollMod[ix]->Fill(c, NcollMod * w * NBDMod * eff);
           }
 
         }// j
       } // iby
     } // ibx
+
+    // Calculate the BBC charge weighted by Ncoll of the modified nucleon
+    for (int ibx = 1; ibx <= hNcoll_NcollA[ix]->GetNbinsX(); ibx++)
+    {
+      for (int iby = 1; iby <= hNcoll_NcollA[ix]->GetNbinsY(); iby++)
+      {
+        double w = hNcoll_NcollA[ix]->GetBinContent(ibx, iby);
+        double wMod = hNcollMod_NcollModA[ix]->GetBinContent(ibx, iby);
+
+        if (!(w > 0 || wMod > 0)) continue;
+
+        double NcollA = hNcoll_NcollA[ix]->GetXaxis()->GetBinCenter(ibx);
+        double Ncoll = hNcoll_NcollA[ix]->GetYaxis()->GetBinCenter(iby);
+
+        for (int j = 1; j <= hBBCscNcollA[ix]->GetNbinsX(); j++)
+        {
+          double c = hBBCscNcollA[ix]->GetXaxis()->GetBinCenter(j);
+          double NBD = evalNBD(c, Ncoll * NBD_mu, Ncoll * NBD_k);
+          double eff = feff->Eval(c);
+
+          if (Ncoll > 0)
+          {
+            hBBCsc[ix]->Fill(c, w * NBD * eff);
+
+            hBBCscNcollA[ix]->Fill(c, NcollA * w * NBD * eff);
+            hBBCscModNcollModA[ix]->Fill(c, NcollA * wMod * NBD * eff);
+          }
+        } // j
+      } // iby
+    } // ibx
+
+
+
+
+
+
+
+
+
+
+
 
     // Calculate the desired charge limits for each centrality bin
     int nq = 2;
@@ -291,17 +334,18 @@ void calculate_RCP_dAuJet()
     cout << "  blim[0]: [" << blim[0][0] << ", " << blim[0][1] << "]"
          << " -> [" << hBBCsc[ix]->GetBinLowEdge(blim[0][0]) << ","
          << hBBCsc[ix]->GetBinLowEdge(blim[0][1] + 1) << "]"
+         << " cent frac:"
+         << hBBCsc[ix]->Integral(blim[0][0], blim[0][1]) / hBBCsc[ix]->Integral()
          << endl;
     cout << "  blim[1]: [" << blim[1][0] << ", " << blim[1][1] << "]"
          << " -> [" << hBBCsc[ix]->GetBinLowEdge(blim[1][0]) << ","
          << hBBCsc[ix]->GetBinLowEdge(blim[1][1] + 1) << "]"
+         << " cent frac:"
+         << hBBCsc[ix]->Integral(blim[1][0], blim[1][1]) / hBBCsc[ix]->Integral()
          << endl;
 
-    double yield[2] = {0};
-    double yield_NcollMod[2] = {0};
-    double yield_BBCscMod[2] = {0};
-    double yield_NcollModBBCscMod[2] = {0};
-
+    double yieldA[2] = {0};
+    double yieldA_NcollModABBCscMod[2] = {0};
 
     for (int iq = 0; iq < 2; iq++)
     {
@@ -315,53 +359,68 @@ void calculate_RCP_dAuJet()
                             blim[iq][0], blim[iq][1]);
 
       // get "jet" yields
-      yield[iq] = hBBCscNcoll[ix]->Integral(blim[iq][0], blim[iq][1]);
-      yield_BBCscMod[iq] = hBBCscModNcoll[ix]->Integral(blim[iq][0], blim[iq][1]);
-      yield_NcollModBBCscMod[iq] = hBBCscModNcollMod[ix]->Integral(blim[iq][0], blim[iq][1]);
-
+      yieldA[iq] = hBBCscNcollA[ix]->Integral(blim[iq][0], blim[iq][1]);
+      yieldA_NcollModABBCscMod[iq] = hBBCscModNcollModA[ix]->Integral(blim[iq][0], blim[iq][1]);
 
       // Calculate the bias factor for each centrality bin
-      bias_BBCcsMod[ix][iq] = yield_BBCscMod[iq] / yield[iq];
-
-      bias_NcollModBBCcsMod[ix][iq] = yield_NcollModBBCscMod[iq] / yield[iq];
+      bias_NcollModABBCscMod[ix][iq] = yieldA_NcollModABBCscMod[iq] / yieldA[iq];
 
     } //iq
 
     // Calculate Rcp
-    rcp_BBCscMod[ix] = bias_BBCcsMod[ix][0] / bias_BBCcsMod[ix][1];
-
-    rcp_NcollModBBCscMod[ix] = bias_NcollModBBCcsMod[ix][0] / bias_NcollModBBCcsMod[ix][1];
+    rcp_NcollModABBCscMod[ix] = bias_NcollModABBCscMod[ix][0] / bias_NcollModABBCscMod[ix][1];
 
     cout << endl;
-    cout << "   <Ncoll(00-20%)>: " << hNcoll[ix][0]->GetMean() << " (vs 15.1)" << endl;
-    cout << "   <Ncoll(60-88%)>: " << hNcoll[ix][1]->GetMean() << " (vs 3.2)" << endl;
-    cout << "   Bias(00-20%) (BBCcs Mod): " << bias_BBCcsMod[ix][0] << endl;
-    cout << "   Bias(00-20%) (both Mod) : " << bias_NcollModBBCcsMod[ix][0] << endl;
-    cout << "   Bias(60-88%) (BBCcs Mod): " << bias_BBCcsMod[ix][1] << endl;
-    cout << "   Bias(60-88%) (both Mod) : " << bias_NcollModBBCcsMod[ix][1] << endl;
-    cout << "   Rcp (BBCcs Mod) : " << rcp_BBCscMod[ix] << endl;
-    cout << "   Rcp (both Mod)  : " << rcp_NcollModBBCscMod[ix] << endl;
-
+    cout << "   <Ncoll(00-20%)> : " << hNcoll[ix][0]->GetMean() << " (vs 15.1)" << endl;
+    cout << "   <Ncoll(60-88%)> : " << hNcoll[ix][1]->GetMean() << " (vs 3.2)" << endl;
+    cout << "   Bias(00-20%)    : " << bias_NcollModABBCscMod[ix][0] << endl;
+    cout << "   Bias(60-88%)    : " << bias_NcollModABBCscMod[ix][1] << endl;
+    cout << "   Rcp             : " << rcp_NcollModABBCscMod[ix] << endl;
 
   }
 
-
-  grcp_BBCscMod = new TGraph(NX, x, rcp_BBCscMod);
-  grcp_BBCscMod->SetName("grcp_BBCscMod");
-  grcp_BBCscMod->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
-  grcp_BBCscMod->SetLineStyle(1);
-  grcp_BBCscMod->SetLineWidth(2);
-  grcp_BBCscMod->SetLineColor(kRed);
-
-  grcp_NcollModBBCscMod = new TGraph(NX, x, rcp_NcollModBBCscMod);
-  grcp_NcollModBBCscMod->SetName("grcp_NcollModBBCscMod");
-  grcp_NcollModBBCscMod->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
-  grcp_NcollModBBCscMod->SetLineStyle(2);
-  grcp_NcollModBBCscMod->SetLineWidth(2);
-  grcp_NcollModBBCscMod->SetLineColor(kGreen + 2);
+  grcp_NcollModABBCscMod = new TGraph(NX, x, rcp_NcollModABBCscMod);
+  grcp_NcollModABBCscMod->SetName("grcp_NcollModABBCscMod");
+  grcp_NcollModABBCscMod->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
 
 
+  //=====================================================//
+  // PRINT VALUES
+  //=====================================================//
+  cout << endl;
+  cout << "--> Printing values" << endl;
 
+  cout << setprecision(2) << fixed;
+
+  // 0-100% Ncoll
+  cout << endl;
+  cout << "--- Ncoll ---" << endl;
+  cout << "x & <Ncoll(0-100%)> & <Ncoll(0-20%) & <Ncoll(60-88%) \\\\" << endl;
+  cout << "0.00 & "
+       << hNcoll_MB[0]->GetMean() << " & "
+       << hNcoll[0][0]->GetMean() << " & "
+       << hNcoll[0][1]->GetMean() << " \\\\ "
+       << endl;
+  for (int ix = 0; ix < NX; ix++)
+  {
+    cout << x[ix] << " & "
+         << hNcollMod_MB[ix]->GetMean() << " & "
+         << hNcollMod[ix][0]->GetMean() << " & "
+         << hNcollMod[ix][1]->GetMean() << " \\\\ "
+         << endl;
+  }
+
+  cout << endl;
+  cout << "--- Bias (BBC mod & NcollMod A) ---" << endl;
+  cout << "x & b.f.(0-20%) & b.f.(60-88%) & Rcp \\\\" << endl;
+  for (int ix = 0; ix < NX; ix++)
+  {
+    cout << x[ix] << " & "
+         << bias_NcollModABBCscMod[ix][0] << " & "
+         << bias_NcollModABBCscMod[ix][1] << " & "
+         << rcp_NcollModABBCscMod[ix] << " \\\\ "
+         << endl;
+  }
 
   //=====================================================//
   // Run 8 d+Au Jet Rcp
@@ -431,18 +490,18 @@ void calculate_RCP_dAuJet()
   l1.SetLineStyle(2);
 
   // set colors
-  grcp_BBCscMod->SetLineColor(kRed);
-  grcp_NcollModBBCscMod->SetLineColor(kGreen + 2);
-
+  grcp_NcollModABBCscMod->SetLineColor(kRed);
+  grcp_NcollModABBCscMod->SetLineWidth(2);
   for (int ix = 0; ix < NX; ix++)
   {
-    hBBCscNcoll[ix]->SetLineColor(kBlue);
-    hBBCscModNcoll[ix]->SetLineColor(kRed);
-    hBBCscModNcollMod[ix]->SetLineColor(kGreen+2);
+    hBBCscNcollA[ix]->SetLineColor(kBlue);
+    hBBCscModNcollModA[ix]->SetLineColor(kRed);
 
-    hBBCscNcoll[ix]->SetLineWidth(2);
-    hBBCscModNcoll[ix]->SetLineWidth(2);
-    hBBCscModNcollMod[ix]->SetLineWidth(2);
+    hBBCscNcollA[ix]->SetLineWidth(2);
+    hBBCscModNcollModA[ix]->SetLineWidth(2);
+
+    hBBCscNcollA[ix]->SetTitle(";BBCs charge");
+    hBBCscModNcollModA[ix]->SetTitle(";BBCs charge");
   }
 
   TH1F* haxis_rcp = new TH1F("haxis_rcp",
@@ -457,39 +516,38 @@ void calculate_RCP_dAuJet()
   legRCP->SetFillStyle(0);
   legRCP->SetBorderSize(0);
   legRCP->AddEntry(gRCP_jet, "Run 8 Jet", "P");
-  legRCP->AddEntry(grcp_BBCscMod, "Mod BBCs charge only", "L");
-  legRCP->AddEntry(grcp_NcollModBBCscMod, "Mod BBCs chrg and N_{coll}", "L");
+  legRCP->AddEntry(grcp_NcollModABBCscMod, "Mod BBCs chrg and N_{coll}", "L");
 
 
 
   int xplot = 2;
 
-  TLegend *legBBC = new TLegend(0.5, 0.7, 0.96, 0.92,
+  TLegend *legBBC = new TLegend(0.15, 0.15, 0.4, 0.4,
                                 Form("d+Au @ 200 GeV, x = %.2f",
                                      x[xplot]));
   legBBC->SetFillStyle(0);
   legBBC->SetBorderSize(0);
-  legBBC->AddEntry(hBBCscNcoll[xplot], "Unmodified", "L");
-  legBBC->AddEntry(hBBCscModNcoll[xplot], "Mod BBCs chg", "L");
-  legBBC->AddEntry(hBBCscModNcollMod[xplot], "Mod BBCs chg and N_{coll}", "L");
+  legBBC->SetTextSize(0.04);
+  legBBC->AddEntry(hBBCscNcollA[xplot], "Unmodified", "L");
+  legBBC->AddEntry(hBBCscModNcollModA[xplot], "Mod BBCs chg and N_{coll}", "L");
 
-//=====================================================//
-// PLOT
-//=====================================================//
 
-  TCanvas *crcp = new TCanvas("crcp", "RCP", 800, 800);
-  crcp->Divide(1, 1);
-  crcp->GetPad(1)->SetTopMargin(0.02);
-  crcp->GetPad(1)->SetRightMargin(0.02);
-  crcp->GetPad(1)->SetBottomMargin(0.10);
-  crcp->GetPad(1)->SetLeftMargin(0.10);
-  crcp->GetPad(1)->SetTicks(1, 1);
+
+  //=====================================================//
+  // PLOT
+  //=====================================================//
+
+  TCanvas *crcp = new TCanvas("crcp", "RCP", 700, 600);
+  crcp->SetTopMargin(0.03);
+  crcp->SetRightMargin(0.03);
+  crcp->SetBottomMargin(0.10);
+  crcp->SetLeftMargin(0.10);
+  crcp->SetTicks(1, 1);
 
   crcp->cd(1);
   haxis_rcp->GetXaxis()->SetRangeUser(0, 0.6);
   haxis_rcp->Draw();
-  grcp_BBCscMod->Draw("C");
-  grcp_NcollModBBCscMod->Draw("C");
+  grcp_NcollModABBCscMod->Draw("C");
   legRCP->Draw("same");
 
   gRCP_jet->Draw("P");
@@ -500,24 +558,21 @@ void calculate_RCP_dAuJet()
 
 
   TCanvas *cbbc = new TCanvas("cbbc", "bbc", 800, 600);
-  cbbc->Divide(1, 1);
-  cbbc->GetPad(1)->SetTopMargin(0.06);
-  cbbc->GetPad(1)->SetRightMargin(0.02);
-  cbbc->GetPad(1)->SetBottomMargin(0.10);
-  cbbc->GetPad(1)->SetLeftMargin(0.10);
-  cbbc->GetPad(1)->SetTicks(1, 1);
+  cbbc->SetTopMargin(0.06);
+  cbbc->SetRightMargin(0.02);
+  cbbc->SetBottomMargin(0.10);
+  cbbc->SetLeftMargin(0.10);
+  cbbc->SetTicks(1, 1);
 
   cbbc->cd(1);
-  hBBCscNcoll[xplot]->SetTitle(";BBCs charge");
-
   gPad->SetLogy();
-  hBBCscNcoll[xplot]->GetYaxis()->SetRangeUser(1, 2e5);
-  hBBCscNcoll[xplot]->GetXaxis()->SetRangeUser(1, 200);
-  hBBCscNcoll[xplot]->Draw();
-  hBBCscModNcoll[xplot]->Draw("same");
-  hBBCscModNcollMod[xplot]->Draw("same");
+  hBBCscNcollA[xplot]->GetYaxis()->SetRangeUser(1, 2e5);
+  hBBCscNcollA[xplot]->GetXaxis()->SetRangeUser(1, 80);
+  hBBCscNcollA[xplot]->Draw();
+  hBBCscModNcollModA[xplot]->Draw("same");
   legBBC->Draw("same");
-  label.DrawLatex(0.5, 0.97, "BBCsc charge for events with high-p_{T} particle");
+  label.DrawLatex(0.5, 0.96, "BBCsc charge for events with high-p_{T} particle");
+
 
 
 //=====================================================//
