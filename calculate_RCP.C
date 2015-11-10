@@ -75,6 +75,8 @@ void calculate_RCP()
   const int NX = 6;             // Number of x values
   double x[] = {0.01, 0.1, 0.2, 0.3, 0.4, 0.5};
 
+  double beta = 1.5;
+
   const int NSYSTEMS = 3;
   const char *collSystem[] = {"pAu", "dAu", "3HeAu"};
 
@@ -154,6 +156,11 @@ void calculate_RCP()
 
   // line colors
   int colors[NSYSTEMS] = { kRed, kBlue, kGreen + 2};
+  // int lstyle[NSYSTEMS] = {    3,     5,          7};
+  int lstyle[NSYSTEMS] = {1, 1, 1};
+
+  // fill colors
+  int fcolor_cent[NCENT] = {kBlue, kRed, kGreen + 2, kYellow + 2};
 
   //=====================================================//
   // DECLARE VARIABLES
@@ -225,6 +232,10 @@ void calculate_RCP()
     } // j
   } // i
 
+
+  TH1D *hBBCsc_cent[NSYSTEMS][NCENT]; // distributions for each centrality bin
+
+
   TH1D *hNcoll_MB[NSYSTEMS][NX];
   TH1D *hNcollMod_MB[NSYSTEMS][NX];
 
@@ -245,11 +256,22 @@ void calculate_RCP()
 
   double rcp_NcollModABBCscMod[NSYSTEMS][NCENT - 1][NX];
   TGraph *grcp_NcollModABBCscMod[NSYSTEMS][NCENT - 1];
+  TGraph *grcp_NcollModABBCscMod_pipT[NSYSTEMS][NCENT - 1];
 
   // for mean BBCs charge
   double mean_BBCs[NSYSTEMS][NX];
 
   TGraph *gmean_BBCs[NSYSTEMS];
+  TGraph *gmean_BBCs_pipT[NSYSTEMS];
+
+  // sigma modification function
+  TF1* fsig = new TF1("fsig", "TMath::Power((1 + TMath::Exp(-1. *[0] * x)), 2) / 4.0", 0, 1);
+  fsig->SetLineColor(kBlue);
+  fsig->SetParameter(0, beta);
+
+  double pi0_pT[NX] = {0};
+  for (int ix = 0; ix < NX; ix++)
+    pi0_pT[ix] = 0.6 * 0.5 * x[ix] * 200;
 
   //=====================================================//
   // GET NTUPLE(S) FROM FILE AND CALCULATE YIELD
@@ -497,6 +519,23 @@ void calculate_RCP()
       }
 
 
+      if (ix == 0)
+      {
+        for (int icent = 0; icent < NCENT; icent++)
+        {
+          hBBCsc_cent[isys][icent] = (TH1D*) hBBCsc[isys][ix]->Clone(
+                                       Form("hBBCsc_cent_%i_%i", isys, icent));
+          hBBCsc_cent[isys][icent]->SetFillColorAlpha(fcolor_cent[icent], 0.8);
+          hBBCsc_cent[isys][icent]->Reset();
+
+          for (int ib = blim[icent][0]; ib <= blim[icent][1]; ib++)
+          {
+            double bc = hBBCsc[isys][ix]->GetBinContent(ib);
+            hBBCsc_cent[isys][icent]->SetBinContent(ib, bc);
+          }
+        }
+      }
+
     } // ix
 
     for (int icent = 0; icent < NCENT - 1; icent++)
@@ -507,35 +546,43 @@ void calculate_RCP()
       grcp_NcollModABBCscMod[isys][icent]->SetLineStyle(1);
       grcp_NcollModABBCscMod[isys][icent]->SetLineWidth(2);
       grcp_NcollModABBCscMod[isys][icent]->SetLineColor(colors[isys]);
+      grcp_NcollModABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
+
+      // vs pion pT
+      grcp_NcollModABBCscMod_pipT[isys][icent] = new TGraph(NX, pi0_pT, rcp_NcollModABBCscMod[isys][icent]);
+      grcp_NcollModABBCscMod_pipT[isys][icent]->SetName(Form("grcp_NcollModABBCscMod_pipT_%i_%i", isys, icent));
+      grcp_NcollModABBCscMod_pipT[isys][icent]->SetTitle(";#pi p_{T};R_{CP}");
+      grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineStyle(1);
+      grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineWidth(2);
+      grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineColor(colors[isys]);
+      grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineStyle(lstyle[isys]);
 
     }
 
     cout << "<Q>" << endl;
     double denom = mean_BBCs[isys][1];
-    double pi0_pT[NX] = {0};
     for (int ix = 0; ix < NX; ix++)
-    {
-      cout << "  " << x[ix] 
-      << " " << mean_BBCs[isys][ix]; 
-
       mean_BBCs[isys][ix] = mean_BBCs[isys][ix] / denom;
-      cout << " " << mean_BBCs[isys][ix]
-      << endl;
 
-      pi0_pT[ix] = 0.6 * 0.5 * x[ix] * 200;
-    }
-
-    gmean_BBCs[isys] = new TGraph(NX, pi0_pT, mean_BBCs[isys]);
+    gmean_BBCs[isys] = new TGraph(NX, x, mean_BBCs[isys]);
     gmean_BBCs[isys]->SetName(Form("gmean_BBCs_%i", isys));
-    gmean_BBCs[isys]->SetTitle(Form(";#pi^{0} p_{T} = 0.6#frac{#sqrt{s}*x}{2};<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
+    gmean_BBCs[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
     gmean_BBCs[isys]->SetLineWidth(2);
     gmean_BBCs[isys]->SetLineColor(colors[isys]);
+    gmean_BBCs[isys]->SetLineStyle(lstyle[isys]);
+
+    gmean_BBCs_pipT[isys] = new TGraph(NX, pi0_pT, mean_BBCs[isys]);
+    gmean_BBCs_pipT[isys]->SetName(Form("gmean_BBCs_%i", isys));
+    gmean_BBCs_pipT[isys]->SetTitle(Form(";#pi p_{T} = 0.6#frac{#sqrt{s}*x}{2};<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
+    gmean_BBCs_pipT[isys]->SetLineWidth(2);
+    gmean_BBCs_pipT[isys]->SetLineColor(colors[isys]);
+    gmean_BBCs_pipT[isys]->SetLineStyle(lstyle[isys]);
 
   } // isys
 
-  //=====================================================//
-  // DO SOME PRINTING
-  //=====================================================//
+//=====================================================//
+// DO SOME PRINTING
+//=====================================================//
   cout << endl;
   cout << "--> Printing ... " << endl;
 
@@ -617,7 +664,7 @@ void calculate_RCP()
       cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
       for (int icent = 0; icent < NCENT; icent++)
         cout << " & " << bias_NcollModABBCscMod[isys][ix][icent];
-    cout << "\\\\" << endl;
+      cout << "\\\\" << endl;
     }
   }
 
@@ -627,11 +674,11 @@ void calculate_RCP()
   for (int isys = 0; isys < NSYSTEMS; isys++)
     cout << " & " << collSystem[isys];
   cout << "\\\\" << endl;
-  // for (int isys = 0; isys < NSYSTEMS; isys++)
-  // {
-  //   for (int icent = 0; icent < NCENT; icent++)
-  //     cout << " & " << centl[isys][icent] << "-" << centl[isys][icent +1];
-  // }
+// for (int isys = 0; isys < NSYSTEMS; isys++)
+// {
+//   for (int icent = 0; icent < NCENT; icent++)
+//     cout << " & " << centl[isys][icent] << "-" << centl[isys][icent +1];
+// }
   cout << " \\\\" << endl;
   for (int ix = 0; ix < NX; ix++)
   {
@@ -657,11 +704,11 @@ void calculate_RCP()
   for (int isys = 0; isys < NSYSTEMS; isys++)
     cout << " & " << collSystem[isys];
   cout << "\\\\" << endl;
-  // for (int isys = 0; isys < NSYSTEMS; isys++)
-  // {
-  //   for (int icent = 0; icent < NCENT; icent++)
-  //     cout << " & " << centl[isys][icent] << "-" << centl[isys][icent + 1];
-  // }
+// for (int isys = 0; isys < NSYSTEMS; isys++)
+// {
+//   for (int icent = 0; icent < NCENT; icent++)
+//     cout << " & " << centl[isys][icent] << "-" << centl[isys][icent + 1];
+// }
   cout << " \\\\" << endl;
   for (int ix = 0; ix < NX; ix++)
   {
@@ -713,15 +760,15 @@ void calculate_RCP()
 
 
 
-  //=====================================================//
-  // Run 8 d+Au Jet Rcp
-  //=====================================================//
+//=====================================================//
+// Run 8 d+Au Jet Rcp
+//=====================================================//
   cout << endl;
   cout << "--> Run 8 d+Au Jet Rcp";
 
-  // Run 8 d+Au Jet RCP
-  // http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1222/dvp-dAuJet-FinalResults-Note-03.pdf
-  // 0-20% / 60-88%
+// Run 8 d+Au Jet RCP
+// http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1222/dvp-dAuJet-FinalResults-Note-03.pdf
+// 0-20% / 60-88%
 
   const int NJET = 8;
   double pTl_jet[NJET] = {12.1, 14.5, 17.3, 20.7, 24.7, 29.4, 35.1, 41.9};
@@ -777,14 +824,13 @@ void calculate_RCP()
       double y2 = Rcp_jet[icent][i] + Rcp_jet_B[icent][i];
 
       bRcp_jet[icent][i] = new TBox(x1, y1, x2, y2);
-      bRcp_jet[icent][i]->SetFillColor(kBlack);
-      bRcp_jet[icent][i]->SetFillStyle(3003);
+      bRcp_jet[icent][i]->SetFillColorAlpha(kGray, 0.6);
     }
   }
 
-  //=====================================================//
-  // PLOT OBJECTS
-  //=====================================================//
+//=====================================================//
+// PLOT OBJECTS
+//=====================================================//
   cout << endl;
   cout << "--> Plotting ..." << endl;
 
@@ -798,8 +844,17 @@ void calculate_RCP()
   haxis_rcp->GetYaxis()->SetTitleOffset(1.3);
   haxis_rcp->GetXaxis()->SetTitleOffset(1.3);
   haxis_rcp->GetYaxis()->CenterTitle();
-  haxis_rcp->SetMinimum(0);
-  haxis_rcp->SetMaximum(1.1);
+  haxis_rcp->SetMinimum(0.01);
+  haxis_rcp->SetMaximum(1.09);
+
+  TH1F* haxis_rcp_pipT = new TH1F("haxis_rcp_pipT",
+                                  ";#pi p_{T};R_{CP}",
+                                  100, 0, 20);
+  haxis_rcp_pipT->GetYaxis()->SetTitleOffset(1.3);
+  haxis_rcp_pipT->GetXaxis()->SetTitleOffset(1.3);
+  haxis_rcp_pipT->GetYaxis()->CenterTitle();
+  haxis_rcp_pipT->SetMinimum(0.01);
+  haxis_rcp_pipT->SetMaximum(1.09);
 
   TLine l1;
   l1.SetLineStyle(2);
@@ -819,6 +874,7 @@ void calculate_RCP()
       legrcp[icent]->AddEntry(grcp_NcollModABBCscMod[isys][icent],
                               collSystem[isys], "L");
     }
+    legrcp[icent]->AddEntry(gRCP_jet[icent], "PHENIX, arXiv:1509.04657", "P");
 
   }
 
@@ -934,17 +990,28 @@ void calculate_RCP()
     legQ->AddEntry(gmean_BBCs[isys], collSystem[isys], "L");
   }
 
+  TLegend *legx = new TLegend(0.8, 0.5, 0.98, 0.98);
+  legx->SetFillStyle(0);
+  legx->SetBorderSize(0);
+  legx->SetTextSize(0.04);
+  legx->AddEntry(hBBCscNcollA[0][0], "x_{p} = 0.00", "L");
+  for (int ix = 0; ix < NX; ix++)
+  {
+    legx->AddEntry(hBBCscModNcollModA[0][ix],
+                   Form("x_{p} = %.2f", x[ix]),
+                   "L");
+  }
 
   //=====================================================//
   // PLOT
   //=====================================================//
 
-  TCanvas *crcp = new TCanvas("crcp", "RCP", 1400, 600);
-  crcp->Divide(NCENT - 1, 1, 0, 0);
+  TCanvas *crcp = new TCanvas("crcp", "RCP", 1400, 400);
   crcp->SetTopMargin(0.0);
   crcp->SetRightMargin(0.0);
   crcp->SetBottomMargin(0.0);
   crcp->SetLeftMargin(0.0);
+  crcp->Divide(NCENT - 1, 1, 0, 0);
 
   for (int icent = 0; icent < NCENT - 1; icent++)
   {
@@ -957,19 +1024,53 @@ void calculate_RCP()
     crcp->cd(icent + 1);
     haxis_rcp->GetXaxis()->SetRangeUser(0, 0.5);
     haxis_rcp->Draw();
+
+    for (int i = 0; i < NJET; i++)
+      bRcp_jet[icent][i]->Draw();
+    gRCP_jet[icent]->Draw("P");
+
+
     for (int isys = 0; isys < NSYSTEMS; isys++)
       grcp_NcollModABBCscMod[isys][icent]->Draw("C");
 
-    gRCP_jet[icent]->Draw("P");
-    for (int i = 0; i < NJET; i++)
-      bRcp_jet[icent][i]->Draw();
+
     l1.DrawLine(0, 1, 0.5, 1);
     legrcp[icent]->Draw("same");
   }
 
-  TCanvas *cbbc = new TCanvas("cbbc", "bbc", 1400, 400);
-  cbbc->Divide(NSYSTEMS, 1, 0, 0);
-  label.DrawLatex(0.5, 0.96, "BBCsc charge for events with high-p_{T} particle");
+  TCanvas *crcppipt = new TCanvas("crcppipt", "RCP", 1400, 400);
+  crcppipt->SetTopMargin(0.0);
+  crcppipt->SetRightMargin(0.0);
+  crcppipt->SetBottomMargin(0.0);
+  crcppipt->SetLeftMargin(0.0);
+  crcppipt->Divide(NCENT - 1, 1, 0, 0);
+
+  for (int icent = 0; icent < NCENT - 1; icent++)
+  {
+    crcppipt->GetPad(icent + 1)->SetTopMargin(0.02);
+    crcppipt->GetPad(icent + 1)->SetRightMargin(0.02);
+    crcppipt->GetPad(icent + 1)->SetBottomMargin(0.10);
+    crcppipt->GetPad(icent + 1)->SetLeftMargin(0.10);
+    crcppipt->GetPad(icent + 1)->SetTicks(1, 1);
+
+    crcppipt->cd(icent + 1);
+    haxis_rcp_pipT->GetXaxis()->SetRangeUser(0, 20);
+    haxis_rcp_pipT->Draw();
+
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+      grcp_NcollModABBCscMod_pipT[isys][icent]->Draw("C");
+
+    l1.DrawLine(0, 1, 20., 1);
+    legrcp[icent]->Draw("same");
+  }
+
+  TCanvas *cbbc = new TCanvas("cbbc", "bbc", 600, 1200);
+  cbbc->SetTopMargin(0.00);
+  cbbc->SetRightMargin(0.00);
+  cbbc->SetBottomMargin(0.00);
+  cbbc->SetLeftMargin(0.00);
+  cbbc->Divide(1, NSYSTEMS, 0, 0);
+
   for (int isys = 0; isys < NSYSTEMS; isys++)
   {
     cbbc->GetPad(isys + 1)->SetTopMargin(0.02);
@@ -980,15 +1081,62 @@ void calculate_RCP()
 
     cbbc->cd(isys + 1);
     gPad->SetLogy();
+    hBBCsc[isys][0]->GetYaxis()->SetRangeUser(1e2, 2e4);
+    hBBCsc[isys][0]->GetXaxis()->SetRangeUser(1, 80);
+    hBBCsc[isys][0]->SetTitle(";Q_{BBC,Au}");
+    hBBCsc[isys][0]->DrawCopy("hist");
+
+    for (int i = 0; i < NCENT; i++)
+      hBBCsc_cent[isys][i]->Draw("hist same");
+
+    label.DrawLatex(0.7, 0.7, collSystem[isys]);
+  }
+
+  TCanvas *cyield = new TCanvas("cyield", "yield", 1400, 400);
+  cyield->Divide(NSYSTEMS, 1, 0, 0);
+  label.DrawLatex(0.5, 0.96, "BBCsc charge for events with high-p_{T} particle");
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+  {
+    cyield->GetPad(isys + 1)->SetTopMargin(0.02);
+    cyield->GetPad(isys + 1)->SetRightMargin(0.02);
+    cyield->GetPad(isys + 1)->SetBottomMargin(0.10);
+    cyield->GetPad(isys + 1)->SetLeftMargin(0.10);
+    cyield->GetPad(isys + 1)->SetTicks(1, 1);
+
+    cyield->cd(isys + 1);
+    gPad->SetLogy();
     hBBCscNcollA[isys][xplot]->GetYaxis()->SetRangeUser(1e2, 2e4);
     hBBCscNcollA[isys][xplot]->GetXaxis()->SetRangeUser(1, 80);
-    hBBCscNcollA[isys][xplot]->Draw("hist");
+    hBBCscNcollA[isys][xplot]->SetTitle(";Q_{BBC,Au}");
+    hBBCscNcollA[isys][xplot]->DrawCopy("hist");
     // hBBCscNcollModA[isys][xplot]->Draw("same");
     // hBBCscModNcollA[isys][xplot]->Draw("same");
-    hBBCscModNcollModA[isys][xplot]->Draw("hist same");
+    hBBCscModNcollModA[isys][xplot]->DrawCopy("hist same");
     legBBC[isys]->Draw("same");
-
   }
+
+  TCanvas* cyieldpau = new TCanvas("cyieldpau", "yield pAu", 600, 400);
+  cyieldpau->SetTopMargin(0.02);
+  cyieldpau->SetRightMargin(0.02);
+  cyieldpau->SetBottomMargin(0.10);
+  cyieldpau->SetLeftMargin(0.10);
+  cyieldpau->SetTicks(1, 1);
+
+  cyieldpau->cd(1);
+  // gPad->SetLogy();
+  // hBBCscNcollA[0][0]->GetYaxis()->SetRangeUser(1e2, 2e4);
+  hBBCscNcollA[0][0]->GetXaxis()->SetRangeUser(1, 30);
+  hBBCscNcollA[0][0]->SetLineWidth(2);
+  hBBCscNcollA[0][0]->SetLineColor(kBlack);
+  hBBCscNcollA[0][0]->SetTitle(";Q_{BBC,Au}");
+  hBBCscNcollA[0][0]->DrawCopy("hist");
+  for (int ix = 0; ix < NX; ix++)
+  {
+    hBBCscModNcollModA[0][ix]->SetLineWidth(1);
+    hBBCscModNcollModA[0][ix]->SetLineColor(2 + ix);
+    hBBCscModNcollModA[0][ix]->DrawCopy("hist same");
+  }
+  legx->Draw("same");
 
   TCanvas *cncollmb = new TCanvas("cncollmb", "MB Ncoll", 1400, 400);
   cncollmb->Divide(NSYSTEMS, 1, 0, 0);
@@ -1038,35 +1186,162 @@ void calculate_RCP()
   cq->SetTicks(1, 1);
 
   cq->cd(1);
-  gmean_BBCs[0]->GetYaxis()->SetTitleOffset(1.30);
-  gmean_BBCs[0]->GetYaxis()->SetRangeUser(0.7, 1.2);
-  gmean_BBCs[0]->GetXaxis()->SetRangeUser(0, 20);
-  gmean_BBCs[0]->Draw("AC");
+  gmean_BBCs_pipT[0]->GetYaxis()->SetTitleOffset(1.30);
+  gmean_BBCs_pipT[0]->GetYaxis()->SetRangeUser(0.7, 1.2);
+  gmean_BBCs_pipT[0]->GetXaxis()->SetRangeUser(0, 20);
+  gmean_BBCs_pipT[0]->Draw("AC");
   for (int isys = 1; isys < NSYSTEMS; isys++)
-    gmean_BBCs[isys]->Draw("C");
+    gmean_BBCs_pipT[isys]->Draw("C");
   l1.DrawLine(0, 1, 0.5, 1);
   legQ->Draw("same");
 
-  //=====================================================//
-  // SAVE
-  //=====================================================//
+
+
+//=====================================================//
+// FIGURES FOR PAPER
+//=====================================================//
+
+  const char *lsystem[] = {"p+Au", "d+Au", "^{3}He+Au"};
+  TLegend *legrcp_paper[NCENT - 1];
+  for (int icent = 0; icent < NCENT - 1; icent++)
+  {
+    double x1, y1;
+    if (icent == NCENT - 2)
+    {
+      x1 = 0.2;
+      y1 = 0.2;
+    }
+    else
+    {
+      x1 = 0.2;
+      y1 = 0.05;
+    }
+    legrcp_paper[icent] = new TLegend(x1, y1, x1 + 0.25, y1 + 0.35,
+                                      Form("(%.0f-%.0f%%) / (%.0f-%.0f%%)",
+                                           centl[1][icent], centl[1][icent + 1],
+                                           centl[1][NCENT - 1], centl[1][NCENT]));
+    legrcp_paper[icent]->SetFillStyle(0);
+    legrcp_paper[icent]->SetBorderSize(0);
+    legrcp_paper[icent]->SetTextSize(0.06);
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+    {
+      legrcp_paper[icent]->AddEntry(grcp_NcollModABBCscMod[isys][icent],
+                                    lsystem[isys], "L");
+    }
+    legrcp_paper[icent]->AddEntry(gRCP_jet[icent], "PHENIX, arXiv:1509.04657", "P");
+
+  }
+
+  TH1F *haxis_sig = new TH1F("haxis_sig", ";x_{p};#sigma(x_{p}) / #sigma_{NN}", 100, 0, 1);
+  haxis_sig->SetMinimum(0);
+  haxis_sig->SetMaximum(1);
+  haxis_sig->GetYaxis()->SetTitleOffset(1.15);
+  haxis_sig->GetYaxis()->CenterTitle();
+  haxis_sig->GetYaxis()->SetLabelSize(0.05);
+  haxis_sig->GetYaxis()->SetTitleSize(0.06);
+  haxis_sig->GetYaxis()->SetNdivisions(6, 3, 0);
+  haxis_sig->GetXaxis()->SetTitleOffset(0.9);
+  haxis_sig->GetXaxis()->SetLabelSize(0.05);
+  haxis_sig->GetXaxis()->SetTitleSize(0.06);
+  haxis_sig->GetXaxis()->SetNdivisions(5, 4, 0);
+
+
+  TH1F* haxis_rcp_paper = new TH1F("haxis_rcp_paper",
+                                   ";x_{p};R_{CP}",
+                                   100, 0, 1);
+  haxis_rcp_paper->GetYaxis()->SetTitleOffset(0.9);
+  haxis_rcp_paper->GetYaxis()->CenterTitle();
+  haxis_rcp_paper->GetYaxis()->SetLabelSize(0.06);
+  haxis_rcp_paper->GetYaxis()->SetTitleSize(0.08);
+  haxis_rcp_paper->GetYaxis()->SetNdivisions(6, 3, 0);
+  haxis_rcp_paper->GetXaxis()->SetTitleOffset(0.9);
+  haxis_rcp_paper->GetXaxis()->SetLabelSize(0.06);
+  haxis_rcp_paper->GetXaxis()->SetTitleSize(0.08);
+  haxis_rcp_paper->GetXaxis()->SetNdivisions(5, 4, 0);
+  haxis_rcp_paper->SetMinimum(0.01);
+  haxis_rcp_paper->SetMaximum(1.19);
+
+  TLatex lpaper;
+  lpaper.SetNDC();
+  lpaper.SetTextAlign(22);
+  lpaper.SetTextSize(0.08);
+
+
+  TCanvas *crcp_paper = new TCanvas("crcp_paper", "RCP", 400, 1200);
+  crcp_paper->SetTopMargin(0.0);
+  crcp_paper->SetRightMargin(0.0);
+  crcp_paper->SetBottomMargin(0.0);
+  crcp_paper->SetLeftMargin(0.0);
+  crcp_paper->Divide(1, NCENT - 1, 0, 0);
+
+  const char *plabel[4] = {"(a)", "(b)", "(c)", "(d)"};
+  for (int icent = 0; icent < NCENT - 1; icent++)
+  {
+    if (icent == 0)
+      crcp_paper->GetPad(icent + 1)->SetTopMargin(0.05);
+    else
+      crcp_paper->GetPad(icent + 1)->SetTopMargin(0.00);
+    if (icent == NCENT - 2)
+      crcp_paper->GetPad(icent + 1)->SetBottomMargin(0.15);
+    else
+      crcp_paper->GetPad(icent + 1)->SetBottomMargin(0.00);
+
+    crcp_paper->GetPad(icent + 1)->SetRightMargin(0.05);
+    crcp_paper->GetPad(icent + 1)->SetLeftMargin(0.15);
+    crcp_paper->GetPad(icent + 1)->SetTicks(1, 1);
+
+    crcp_paper->cd(icent + 1);
+    haxis_rcp_paper->GetXaxis()->SetRangeUser(0, 0.5);
+    haxis_rcp_paper->Draw();
+
+    for (int i = 0; i < NJET; i++)
+      bRcp_jet[icent][i]->Draw();
+    gRCP_jet[icent]->Draw("P");
+
+
+    for (int isys = 0; isys < NSYSTEMS; isys++)
+      grcp_NcollModABBCscMod[isys][icent]->Draw("C");
+
+
+    l1.DrawLine(0, 1, 0.5, 1);
+    legrcp_paper[icent]->Draw("same");
+    if (icent == 0)
+      lpaper.DrawLatex(0.9, 0.88, plabel[icent]);
+    else
+      lpaper.DrawLatex(0.9, 0.93, plabel[icent]);
+  }
+
+
+  TCanvas *csig_paper = new TCanvas("csig_paper", "sig mod", 500, 500);
+  csig_paper->SetTopMargin(0.05);
+  csig_paper->SetRightMargin(0.05);
+  csig_paper->SetBottomMargin(0.15);
+  csig_paper->SetLeftMargin(0.15);
+  csig_paper->SetTicks(1, 1);
+
+  csig_paper->cd(1);
+  haxis_sig->Draw();
+  fsig->Draw("same");
+
+
+//=====================================================//
+// SAVE
+//=====================================================//
   if (saveRcp)
   {
     cout << endl;
     cout << "--> Saving RCP to " << outFile << endl;
 
     crcp->Print("Rcp_systems.pdf");
-    cbbc->Print("yield_systems.pdf");
+    cyield->Print("yield_systems.pdf");
     cncoll->Print("Ncoll_systems.pdf");
     cncollmb->Print("MBNcoll_systems.pdf");
     cq->Print("Q_systems.pdf");
+    cyieldpau->Print("yield_pAu.pdf");
+    crcppipt->Print("Rcp_pipT_systems.pdf");
+    cbbc->Print("BBCQ_systems.pdf");
 
-    // crcpcent->Print("R_systems.pdf");
-
-    // TFile *fout = new TFile(outFile, "UPDATE");
-
-    // grcp->Write(Form("Rcp_%s", collSystem));
-
-    // fout->Close();
+    crcp_paper->Print("Rcp_paper.pdf");
+    csig_paper->Print("sigmod.pdf");
   }
 }
