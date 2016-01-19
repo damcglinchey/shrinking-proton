@@ -291,12 +291,12 @@ void calculate_RCP()
           1596, 1, 400);
 
       hBBCscNcollModA_noTrig[i][j] = new TH1D(Form("hBBCscNcollModA_noTrig_%i_%i", i, j),
-          ";N_{coll}^{mod}(A) #time BBCs charge",
-          1596, 1, 400);
+                                              ";N_{coll}^{mod}(A) #time BBCs charge",
+                                              1596, 1, 400);
 
       hBBCscModNcollA_noTrig[i][j] = new TH1D(Form("hBBCscModNcollA_noTrig_%i_%i", i, j),
-          ";N_{coll}(A) #time BBCs charge Mod",
-          1596, 1, 400);
+                                              ";N_{coll}(A) #time BBCs charge Mod",
+                                              1596, 1, 400);
 
     } // j
   } // i
@@ -336,6 +336,10 @@ void calculate_RCP()
   TGraph *graa_NcollModABBCsc[NSYSTEMS][NCENT];
   TGraph *graa_NcollABBCscMod[NSYSTEMS][NCENT];
 
+  TGraph *graa_NcollModABBCscMod_MB[NSYSTEMS];
+  TGraph *graa_NcollModABBCsc_MB[NSYSTEMS];
+  TGraph *graa_NcollABBCscMod_MB[NSYSTEMS];
+
   // for Rcp
   double rcp_NcollModABBCscMod[NSYSTEMS][NCENT - 1][NX];
   double rcp_NcollModABBCsc[NSYSTEMS][NCENT - 1][NX];
@@ -350,7 +354,9 @@ void calculate_RCP()
   double mean_BBCs_NcollModABBCsc[NSYSTEMS][NX];
   double mean_BBCs_NcollABBCscMod[NSYSTEMS][NX];
 
-  TGraph *gmean_BBCs[NSYSTEMS];
+  TGraph *gmean_BBCs_NcollModABBCscMod[NSYSTEMS];
+  TGraph *gmean_BBCs_NcollModABBCsc[NSYSTEMS];
+  TGraph *gmean_BBCs_NcollABBCscMod[NSYSTEMS];
   TGraph *gmean_BBCs_pipT[NSYSTEMS];
 
   // sigma modification function
@@ -488,24 +494,39 @@ void calculate_RCP()
       } // ibx
 
       // Calculate the BBC charge weighted by Ncoll of the modified nucleon
+      // These represent the "yield" as a function of BBC south charge
       for (int ibx = 1; ibx <= hNcoll_NcollA[isys][ix]->GetNbinsX(); ibx++)
       {
         for (int iby = 1; iby <= hNcoll_NcollA[isys][ix]->GetNbinsY(); iby++)
         {
+          // In all cases, the x and y axes have the same binning and range
+          // We can therefore do all permutations of modifying the
+          // nucleon Ncoll and/or event Ncoll at the same time
+          //   ibx: Nucleon Ncoll (containing high-x quark)
+          //   iby: Event Ncoll
+
+          // Unmodified case:
           double w = hNcoll_NcollA[isys][ix]->GetBinContent(ibx, iby);
+          // Modified case:
           double wMod = hNcollMod_NcollModA[isys][ix]->GetBinContent(ibx, iby);
+          // Modified nucleon Ncoll:
           double wModA = hNcoll_NcollModA[isys][ix]->GetBinContent(ibx, iby);
+          // Modified collision Ncoll:
           double wModBBCsc = hNcollMod_NcollA[isys][ix]->GetBinContent(ibx, iby);
 
+          // make sure that we have entries in at least one of the cases
           if (!(w > 0 || wMod > 0 || wModA > 0 || wModBBCsc > 0)) continue;
 
           double NcollA = hNcoll_NcollA[isys][ix]->GetXaxis()->GetBinCenter(ibx);
           double Ncoll = hNcoll_NcollA[isys][ix]->GetYaxis()->GetBinCenter(iby);
 
+          // Loop over BBC south charge (our centrality estimator)
           for (int j = 1; j <= hBBCscNcollA[isys][ix]->GetNbinsX(); j++)
           {
             double c = hBBCscNcollA[isys][ix]->GetXaxis()->GetBinCenter(j);
-            double NBD = evalNBD(c, Ncoll * NBD_par[isys][0], Ncoll * NBD_par[isys][1]);
+            double NBD = evalNBD(c,
+                                 Ncoll * NBD_par[isys][0],
+                                 Ncoll * NBD_par[isys][1]);
             double eff = ftrigeff->Eval(c);
 
             if (Ncoll > 0)
@@ -527,7 +548,7 @@ void calculate_RCP()
         } // iby
       } // ibx
 
-      //-------------------------------------------------------
+      //-----------------------------------------------------------------
       // From here on out, we'll consider three cases:
       // 1) NcollModABBCscMod:
       //        Use the modified projectile nucleon Ncoll for weighting
@@ -538,7 +559,7 @@ void calculate_RCP()
       // 1) NcollABBCscMod:
       //        Use the unmodified projectile nucleon Ncoll for weighting
       //        Use the modified BBC south charge
-      //-------------------------------------------------------
+      //-----------------------------------------------------------------
 
 
       //-- Deal with charge distributions --//
@@ -591,24 +612,33 @@ void calculate_RCP()
       for (int icent = 0; icent < NCENT; icent++)
       {
         // get Ncoll distributions for each centrality bin
-        hNcoll_cent[isys][ix][icent] = (TH1D*) hNcoll_BBCsc[isys][ix]->ProjectionY(
-                                         Form("hNcoll_cent_%i_%i_%i", isys, ix, icent),
-                                         blim[icent][0], blim[icent][1]);
+        hNcoll_cent[isys][ix][icent] =
+          (TH1D*) hNcoll_BBCsc[isys][ix]->ProjectionY(
+            Form("hNcoll_cent_%i_%i_%i", isys, ix, icent),
+            blim[icent][0], blim[icent][1]);
 
-        hNcollMod_cent[isys][ix][icent] = (TH1D*) hNcollMod_BBCscMod[isys][ix]->ProjectionY(
-                                            Form("hNcollMod_cent_%i_%i_%i", isys, ix, icent),
-                                            blim[icent][0], blim[icent][1]);
+        hNcollMod_cent[isys][ix][icent] =
+          (TH1D*) hNcollMod_BBCscMod[isys][ix]->ProjectionY(
+            Form("hNcollMod_cent_%i_%i_%i", isys, ix, icent),
+            blim[icent][0], blim[icent][1]);
 
         // get "jet" yields
-        yieldA[icent] = hBBCscNcollA[isys][ix]->Integral(blim[icent][0], blim[icent][1]);
-        yieldA_NcollModABBCscMod[icent] = hBBCscModNcollModA[isys][ix]->Integral(blim[icent][0], blim[icent][1]);
-        yieldA_NcollModABBCsc[icent] = hBBCscNcollModA[isys][ix]->Integral(blim[icent][0], blim[icent][1]);
-        yieldA_NcollABBCscMod[icent] = hBBCscModNcollA[isys][ix]->Integral(blim[icent][0], blim[icent][1]);
+        yieldA[icent] =
+          hBBCscNcollA[isys][ix]->Integral(blim[icent][0], blim[icent][1]);
+        yieldA_NcollModABBCscMod[icent] =
+          hBBCscModNcollModA[isys][ix]->Integral(blim[icent][0], blim[icent][1]);
+        yieldA_NcollModABBCsc[icent] =
+          hBBCscNcollModA[isys][ix]->Integral(blim[icent][0], blim[icent][1]);
+        yieldA_NcollABBCscMod[icent] =
+          hBBCscModNcollA[isys][ix]->Integral(blim[icent][0], blim[icent][1]);
 
         // Calculate the bias factor for each centrality bin
-        bias_NcollModABBCscMod[isys][ix][icent] = yieldA_NcollModABBCscMod[icent] / yieldA[icent];
-        bias_NcollModABBCsc[isys][ix][icent] = yieldA_NcollModABBCsc[icent] / yieldA[icent];
-        bias_NcollABBCscMod[isys][ix][icent] = yieldA_NcollABBCscMod[icent] / yieldA[icent];
+        bias_NcollModABBCscMod[isys][ix][icent] =
+          yieldA_NcollModABBCscMod[icent] / yieldA[icent];
+        bias_NcollModABBCsc[isys][ix][icent] =
+          yieldA_NcollModABBCsc[icent] / yieldA[icent];
+        bias_NcollABBCscMod[isys][ix][icent] =
+          yieldA_NcollABBCscMod[icent] / yieldA[icent];
 
         // print
         // cout << " cent: " << centl[isys][icent] << " - " << centl[isys][icent + 1] << endl;
@@ -621,8 +651,6 @@ void calculate_RCP()
       } //icent
 
       // Calculate Rcp
-      // cout << endl;
-      // cout << " Rcp: " << endl;
       for (int icent = 0; icent < NCENT - 1; icent++)
       {
         rcp_NcollModABBCscMod[isys][icent][ix] = bias_NcollModABBCscMod[isys][ix][icent];
@@ -633,17 +661,13 @@ void calculate_RCP()
 
         rcp_NcollABBCscMod[isys][icent][ix] = bias_NcollABBCscMod[isys][ix][icent];
         rcp_NcollABBCscMod[isys][icent][ix] /= bias_NcollABBCscMod[isys][ix][NCENT - 1];
-
-        // cout << "   " << centl[isys][icent] << " - " << centl[isys][icent + 1] << ": "
-        //      << rcp_NcollModABBCscMod[isys][icent][ix]
-        //      << endl;
       }
 
       //-- Calculate the 0-100% modification and RAA --//
       double yieldA_MB = hBBCscNcollA_noTrig[isys][ix]->Integral();
       double yieldA_NcollModABBCscMod_MB = hBBCscModNcollModA_noTrig[isys][ix]->Integral();
       double yieldA_NcollModABBCsc_MB = hBBCscNcollModA_noTrig[isys][ix]->Integral();
-      double yieldA_NcollABBCscMod_MB = hBBCscModNcollModA_noTrig[isys][ix]->Integral();
+      double yieldA_NcollABBCscMod_MB = hBBCscModNcollA_noTrig[isys][ix]->Integral();
 
       bias_NcollModABBCscMod_MB[isys][ix] = yieldA_NcollModABBCscMod_MB / yieldA_MB;
       bias_NcollModABBCsc_MB[isys][ix] = yieldA_NcollModABBCsc_MB / yieldA_MB;
@@ -661,8 +685,8 @@ void calculate_RCP()
         raa_NcollModABBCsc[isys][icent][ix] = bias_NcollModABBCsc[isys][ix][icent];
         raa_NcollModABBCsc[isys][icent][ix] /= bias_NcollModABBCsc_MB[isys][ix];
 
-        // raa_NcollABBCscMod[isys][icent][ix] = bias_NcollABBCscMod[isys][ix][icent];
-        // raa_NcollABBCscMod[isys][icent][ix] /= bias_NcollABBCscMod_MB[isys][ix];
+        raa_NcollABBCscMod[isys][icent][ix] = bias_NcollABBCscMod[isys][ix][icent];
+        raa_NcollABBCscMod[isys][icent][ix] /= bias_NcollABBCscMod_MB[isys][ix];
       }
 
 
@@ -687,7 +711,44 @@ void calculate_RCP()
     } // ix
 
 
-    //-- Define RAA graphs
+    //-- Define MB RAA graphs
+    graa_NcollModABBCscMod_MB[isys] = new TGraph(NX,
+        x,
+        bias_NcollModABBCscMod_MB[isys]);
+    graa_NcollModABBCscMod_MB[isys]->SetName(
+      Form("graa_NcollModABBCscMod_MB_%i", isys));
+    graa_NcollModABBCscMod_MB[isys]->SetTitle(";x_{p};R_{AA}");
+    graa_NcollModABBCscMod_MB[isys]->SetLineStyle(1);
+    graa_NcollModABBCscMod_MB[isys]->SetLineWidth(2);
+    graa_NcollModABBCscMod_MB[isys]->SetLineColor(colors[isys]);
+    graa_NcollModABBCscMod_MB[isys]->SetLineStyle(lstyle[isys]);
+
+    graa_NcollModABBCsc_MB[isys] = new TGraph(NX,
+        x,
+        bias_NcollModABBCsc_MB[isys]);
+    graa_NcollModABBCsc_MB[isys]->SetName(
+      Form("graa_NcollModABBCsc_MB_%i", isys));
+    graa_NcollModABBCsc_MB[isys]->SetTitle(";x_{p};R_{AA}");
+    graa_NcollModABBCsc_MB[isys]->SetLineStyle(1);
+    graa_NcollModABBCsc_MB[isys]->SetLineWidth(2);
+    graa_NcollModABBCsc_MB[isys]->SetLineColor(colors[isys]);
+    graa_NcollModABBCsc_MB[isys]->SetLineStyle(4);
+
+    graa_NcollABBCscMod_MB[isys] = new TGraph(NX,
+        x,
+        bias_NcollABBCscMod_MB[isys]);
+    graa_NcollABBCscMod_MB[isys]->SetName(
+      Form("graa_NcollABBCscMod_MB_%i", isys));
+    graa_NcollABBCscMod_MB[isys]->SetTitle(";x_{p};R_{AA}");
+    graa_NcollABBCscMod_MB[isys]->SetLineStyle(1);
+    graa_NcollABBCscMod_MB[isys]->SetLineWidth(2);
+    graa_NcollABBCscMod_MB[isys]->SetLineColor(colors[isys]);
+    graa_NcollABBCscMod_MB[isys]->SetLineStyle(7);
+
+
+
+
+    //-- Define RAA centrality graphs
     for (int icent = 0; icent < NCENT; icent++)
     {
       graa_NcollModABBCscMod[isys][icent] = new TGraph(NX,
@@ -779,16 +840,33 @@ void calculate_RCP()
 
     //-- scale the <BBCsc> by the unmodified value (x=0)
     double denom = mean_BBCs_NcollModABBCscMod[isys][0];
-    for (int ix = 0; ix < NX; ix++)
-      mean_BBCs_NcollModABBCscMod[isys][ix] =
-        mean_BBCs_NcollModABBCscMod[isys][ix] / denom;
+    for (int ix = NX - 1; ix >= 0; ix--)
+    {
+      mean_BBCs_NcollModABBCscMod[isys][ix] /= mean_BBCs_NcollModABBCscMod[isys][0];
+      mean_BBCs_NcollModABBCsc[isys][ix] /= mean_BBCs_NcollModABBCsc[isys][0];
+      mean_BBCs_NcollABBCscMod[isys][ix] /= mean_BBCs_NcollABBCscMod[isys][0];
+    }
 
-    gmean_BBCs[isys] = new TGraph(NX, x, mean_BBCs_NcollModABBCscMod[isys]);
-    gmean_BBCs[isys]->SetName(Form("gmean_BBCs_%i", isys));
-    gmean_BBCs[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
-    gmean_BBCs[isys]->SetLineWidth(2);
-    gmean_BBCs[isys]->SetLineColor(colors[isys]);
-    gmean_BBCs[isys]->SetLineStyle(lstyle[isys]);
+    gmean_BBCs_NcollModABBCscMod[isys] = new TGraph(NX, x, mean_BBCs_NcollModABBCscMod[isys]);
+    gmean_BBCs_NcollModABBCscMod[isys]->SetName(Form("gmean_BBCs_NcollModABBCscMod_%i", isys));
+    gmean_BBCs_NcollModABBCscMod[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
+    gmean_BBCs_NcollModABBCscMod[isys]->SetLineWidth(2);
+    gmean_BBCs_NcollModABBCscMod[isys]->SetLineColor(colors[isys]);
+    gmean_BBCs_NcollModABBCscMod[isys]->SetLineStyle(lstyle[isys]);
+
+    gmean_BBCs_NcollModABBCsc[isys] = new TGraph(NX, x, mean_BBCs_NcollModABBCsc[isys]);
+    gmean_BBCs_NcollModABBCsc[isys]->SetName(Form("gmean_BBCs_NcollModABBCsc_%i", isys));
+    gmean_BBCs_NcollModABBCsc[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
+    gmean_BBCs_NcollModABBCsc[isys]->SetLineWidth(2);
+    gmean_BBCs_NcollModABBCsc[isys]->SetLineColor(colors[isys]);
+    gmean_BBCs_NcollModABBCsc[isys]->SetLineStyle(lstyle[isys]);
+
+    gmean_BBCs_NcollABBCscMod[isys] = new TGraph(NX, x, mean_BBCs_NcollABBCscMod[isys]);
+    gmean_BBCs_NcollABBCscMod[isys]->SetName(Form("gmean_BBCs_NcollABBCscMod_%i", isys));
+    gmean_BBCs_NcollABBCscMod[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
+    gmean_BBCs_NcollABBCscMod[isys]->SetLineWidth(2);
+    gmean_BBCs_NcollABBCscMod[isys]->SetLineColor(colors[isys]);
+    gmean_BBCs_NcollABBCscMod[isys]->SetLineStyle(lstyle[isys]);
 
     gmean_BBCs_pipT[isys] = new TGraph(NX,
                                        pi0_pT,
@@ -1369,7 +1447,7 @@ void calculate_RCP()
   legQ->SetTextSize(0.04);
   for (int isys = 0; isys < NSYSTEMS; isys++)
   {
-    legQ->AddEntry(gmean_BBCs[isys], collSystem[isys], "L");
+    legQ->AddEntry(gmean_BBCs_NcollABBCscMod[isys], collSystem[isys], "L");
   }
 
   TLegend *legx = new TLegend(0.8, 0.5, 0.98, 0.98);
@@ -1384,13 +1462,26 @@ void calculate_RCP()
                    "L");
   }
 
-  TLegend *legmod = new TLegend(0.8, 0.5, 0.98, 0.98);
-  legmod->SetFillStyle(0);
-  legmod->SetBorderSize(0);
-  legmod->SetTextSize(0.04);
-  legmod->AddEntry(graa_NcollModABBCscMod)
+  TLegend *legmod[NSYSTEMS];
+  for (int isys = 0; isys < NSYSTEMS; isys++)
+  {
 
+    legmod[isys] = new TLegend(0.2, 0.7, 0.98, 0.98);
+    legmod[isys]->SetFillStyle(0);
+    legmod[isys]->SetBorderSize(0);
+    legmod[isys]->SetTextSize(0.08);
+    legmod[isys]->SetNColumns(3);
+    legmod[isys]->AddEntry(graa_NcollModABBCscMod_MB[isys],
+                           "N_{coll}^{Mod} & BBCsc^{Mod}",
+                           "L");
+    legmod[isys]->AddEntry(graa_NcollModABBCsc_MB[isys],
+                           "N_{coll}^{Mod} & BBCsc",
+                           "L");
+    legmod[isys]->AddEntry(graa_NcollABBCscMod_MB[isys],
+                           "N_{coll} & BBCsc^{Mod}",
+                           "L");
 
+  }
   //=====================================================//
   // PLOT
   //=====================================================//
@@ -1639,6 +1730,70 @@ void calculate_RCP()
   legQ->Draw("same");
 
 
+  TCanvas *cdau = new TCanvas("cdau", "raa dau", 800, 1000);
+  cdau->Divide(2, NCENT + 1);
+
+  for (int i = 1; i <= (2 * (NCENT + 1)); i++)
+  {
+    cdau->GetPad(i)->SetTopMargin(0.02);
+    cdau->GetPad(i)->SetRightMargin(0.02);
+    cdau->GetPad(i)->SetBottomMargin(0.1);
+    cdau->GetPad(i)->SetLeftMargin(0.1);
+    cdau->GetPad(i)->SetTicks(1, 1);
+  }
+
+  cdau->cd(1);
+  haxis_raa->GetXaxis()->SetRangeUser(0, 1.0);
+  haxis_raa->DrawCopy();
+
+  graa_NcollModABBCscMod_MB[1]->Draw("L");
+  graa_NcollModABBCsc_MB[1]->Draw("L");
+  graa_NcollABBCscMod_MB[1]->Draw("L");
+
+  l1.DrawLine(0, 1, 1.0, 1);
+
+  label.DrawLatex(0.2, 0.2, "MB");
+  legmod[1]->Draw("same");
+
+  for (int icent = 0; icent < NCENT; icent++)
+  {
+    cdau->cd(2 * icent + 3);
+    haxis_raa->GetXaxis()->SetRangeUser(0, 1.0);
+    haxis_raa->DrawCopy();
+
+    for (int i = 0; i < NJET; i++)
+      bRdAu_jet[icent][i]->Draw();
+    gRdAu_jet[icent]->Draw("P");
+
+    graa_NcollModABBCscMod[1][icent]->Draw("L");
+    graa_NcollModABBCsc[1][icent]->Draw("L");
+    graa_NcollABBCscMod[1][icent]->Draw("L");
+
+    l1.DrawLine(0, 1, 1.0, 1);
+
+    label.DrawLatex(0.25, 0.85,
+                    Form("%.0f - %.0f%%", centl[1][icent], centl[1][icent + 1]));
+
+  }
+
+  for (int icent = 0; icent < NCENT - 1; icent++)
+  {
+    cdau->cd(2 * icent + 4);
+    haxis_rcp->GetXaxis()->SetRangeUser(0, 0.5);
+    haxis_rcp->DrawCopy();
+
+    for (int i = 0; i < NJET; i++)
+      bRcp_jet[icent][i]->Draw();
+    gRCP_jet[icent]->Draw("P");
+
+    grcp_NcollModABBCscMod[1][icent]->Draw("C");
+    grcp_NcollModABBCsc[1][icent]->Draw("C");
+    grcp_NcollABBCscMod[1][icent]->Draw("C");
+
+
+    l1.DrawLine(0, 1, 0.5, 1);
+  }
+
 
   //=====================================================//
   // FIGURE OBJECTS FOR PAPER
@@ -1704,7 +1859,7 @@ void calculate_RCP()
   legQ_paper->SetBorderSize(0);
   legQ_paper->SetTextSize(0.05);
   for (int isys = 0; isys < NSYSTEMS; isys++)
-    legQ_paper->AddEntry(gmean_BBCs[isys], lsystem[isys], "L");
+    legQ_paper->AddEntry(gmean_BBCs_NcollABBCscMod[isys], lsystem[isys], "L");
 
 
 
@@ -1885,7 +2040,8 @@ void calculate_RCP()
 
 
     for (int isys = 0; isys < NSYSTEMS; isys++)
-      grcp_NcollModABBCscMod[isys][icent]->Draw("C");
+      grcp_NcollABBCscMod[isys][icent]->Draw("C");
+    // grcp_NcollModABBCscMod[isys][icent]->Draw("C");
 
 
     l1.DrawLine(0, 1, 0.5, 1);
@@ -1975,7 +2131,8 @@ void calculate_RCP()
     gRdAu_jet[icent]->Draw("P");
 
     for (int isys = 0; isys < NSYSTEMS; isys++)
-      graa_NcollModABBCscMod[isys][icent]->Draw("C");
+      graa_NcollABBCscMod[isys][icent]->Draw("C");
+    // graa_NcollModABBCscMod[isys][icent]->Draw("C");
 
     l1.DrawLine(0, 1, 1.0, 1);
     if (icent == 0)
@@ -2007,7 +2164,6 @@ void calculate_RCP()
   fsig->Draw("same");
 
 
-  cout << "here" << endl;
   TCanvas *cjda_paper = new TCanvas("cjda_paper", "jda", 500, 1000);
   cjda_paper->SetTopMargin(0);
   cjda_paper->SetRightMargin(0);
@@ -2048,7 +2204,8 @@ void calculate_RCP()
     bJdA_hpt[0][j]->Draw("same");
   gJdA_hpt[0]->Draw("P");
 
-  graa_NcollModABBCscMod[1][0]->Draw("C");
+  graa_NcollABBCscMod[1][0]->Draw("C");
+  // graa_NcollModABBCscMod[1][0]->Draw("C");
 
   l1.DrawLine(0, 1, 1.0, 1);
   label.DrawLatex(0.3, 0.1, "0-20%");
@@ -2085,67 +2242,12 @@ void calculate_RCP()
     bJcp_hpt[j]->Draw("same");
   gJcp_hpt->Draw("P");
 
-  grcp_NcollModABBCscMod[1][0]->Draw("same");
+  grcp_NcollABBCscMod[1][0]->Draw("same");
+  // grcp_NcollModABBCscMod[1][0]->Draw("same");
 
   l1.DrawLine(0, 1, 1.0, 1);
   label.DrawLatex(0.3, 0.2, "(0-20%)/(60-88%)");
   label.DrawLatex(0.95, 0.95, "(c)");
-
-  cout << "here" << endl;
-
-
-
-  // TCanvas *cjda_rat_paper = new TCanvas("cjda_rat_paper", "jda", 600, 900);
-  // cjda_rat_paper->SetTopMargin(0);
-  // cjda_rat_paper->SetRightMargin(0);
-  // cjda_rat_paper->SetBottomMargin(0);
-  // cjda_rat_paper->SetLeftMargin(0);
-  // cjda_rat_paper->Divide(1, 2, 0, 0);
-
-  // cjda_rat_paper->GetPad(1)->SetTopMargin(0.15);
-  // cjda_rat_paper->GetPad(1)->SetRightMargin(0.02);
-  // cjda_rat_paper->GetPad(1)->SetBottomMargin(0.00);
-  // cjda_rat_paper->GetPad(1)->SetLeftMargin(0.15);
-  // cjda_rat_paper->GetPad(1)->SetTicks(0, 1);
-
-  // cjda_rat_paper->GetPad(2)->SetTopMargin(0.00);
-  // cjda_rat_paper->GetPad(2)->SetRightMargin(0.02);
-  // cjda_rat_paper->GetPad(2)->SetBottomMargin(0.15);
-  // cjda_rat_paper->GetPad(2)->SetLeftMargin(0.15);
-  // cjda_rat_paper->GetPad(2)->SetTicks(1, 1);
-
-
-  // cjda_rat_paper->cd(1);
-  // haxis_jda_paper->GetYaxis()->SetRangeUser(0.01, 1.49);
-  // haxis_jda_paper->GetYaxis()->SetTitle("J_{dA}/model");
-  // haxis_jda_paper->DrawCopy();
-
-  // for (int j = 0; j < NPPG128; j++)
-  //   bJdA_rat[0][j]->Draw("same");
-  // gJdA_rat[0]->Draw("P");
-
-  // l1.DrawLine(0, 1, 1.0, 1);
-  // label.DrawLatex(0.3, 0.8, "0-20%");
-  // legjda_paper->Draw("same");
-
-  // cjda_rat_paper->cd(2);
-  // haxis_jda_paper->GetYaxis()->SetRangeUser(0.01, 1.49);
-  // haxis_jda_paper->GetYaxis()->SetTitle("J_{dA}/model");
-  // haxis_jda_paper->DrawCopy();
-
-  // for (int j = 0; j < NPPG128; j++)
-  //   bJdA_rat[1][j]->Draw("same");
-  // gJdA_rat[1]->Draw("P");
-
-  // l1.DrawLine(0, 1, 1.0, 1);
-  // label.DrawLatex(0.3, 0.95, "60-88%");
-
-
-
-
-
-
-
 
 
 
@@ -2160,7 +2262,7 @@ void calculate_RCP()
   haxis_Q_paper->Draw();
 
   for (int isys = 0; isys < NSYSTEMS; isys++)
-    gmean_BBCs[isys]->Draw("C");
+    gmean_BBCs_NcollABBCscMod[isys]->Draw("C");
 
   l1.DrawLine(0, 1, 1.0, 1);
   legQ_paper->Draw("same");
@@ -2183,7 +2285,7 @@ void calculate_RCP()
     crcppipt->Print("Rcp_pipT_systems.pdf");
     cbbc->Print("BBCQ_systems.pdf");
     craa->Print("RAA_systems.pdf");
-    cjda->Print("JdA_dAu.pdf");
+    cdau->Print("RAA_dAu_mods.pdf");
 
     crcp_paper->Print("Rcp_paper.pdf");
     craa_paper->Print("RAA_paper.pdf");
