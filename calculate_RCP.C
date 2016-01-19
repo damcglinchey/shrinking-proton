@@ -240,6 +240,8 @@ void calculate_RCP()
 
   TH1D* hBBCscNcollA_noTrig[NSYSTEMS][NX];
   TH1D* hBBCscModNcollModA_noTrig[NSYSTEMS][NX];
+  TH1D* hBBCscNcollModA_noTrig[NSYSTEMS][NX];
+  TH1D* hBBCscModNcollA_noTrig[NSYSTEMS][NX];
 
   for (int i = 0; i < NSYSTEMS; i++)
   {
@@ -288,6 +290,13 @@ void calculate_RCP()
           ";N_{coll}^{mod}(A) #time BBCs charge Mod",
           1596, 1, 400);
 
+      hBBCscNcollModA_noTrig[i][j] = new TH1D(Form("hBBCscNcollModA_noTrig_%i_%i", i, j),
+          ";N_{coll}^{mod}(A) #time BBCs charge",
+          1596, 1, 400);
+
+      hBBCscModNcollA_noTrig[i][j] = new TH1D(Form("hBBCscModNcollA_noTrig_%i_%i", i, j),
+          ";N_{coll}(A) #time BBCs charge Mod",
+          1596, 1, 400);
 
     } // j
   } // i
@@ -311,21 +320,35 @@ void calculate_RCP()
 
   // bias factors
   double bias_NcollModABBCscMod_MB[NSYSTEMS][NX];
+  double bias_NcollModABBCsc_MB[NSYSTEMS][NX];
+  double bias_NcollABBCscMod_MB[NSYSTEMS][NX];
+
   double bias_NcollModABBCsc[NSYSTEMS][NX][NCENT];
   double bias_NcollABBCscMod[NSYSTEMS][NX][NCENT];
   double bias_NcollModABBCscMod[NSYSTEMS][NX][NCENT];
 
   // for RAA
   double raa_NcollModABBCscMod[NSYSTEMS][NCENT][NX];
+  double raa_NcollModABBCsc[NSYSTEMS][NCENT][NX];
+  double raa_NcollABBCscMod[NSYSTEMS][NCENT][NX];
+
   TGraph *graa_NcollModABBCscMod[NSYSTEMS][NCENT];
+  TGraph *graa_NcollModABBCsc[NSYSTEMS][NCENT];
+  TGraph *graa_NcollABBCscMod[NSYSTEMS][NCENT];
 
   // for Rcp
   double rcp_NcollModABBCscMod[NSYSTEMS][NCENT - 1][NX];
+  double rcp_NcollModABBCsc[NSYSTEMS][NCENT - 1][NX];
+  double rcp_NcollABBCscMod[NSYSTEMS][NCENT - 1][NX];
   TGraph *grcp_NcollModABBCscMod[NSYSTEMS][NCENT - 1];
+  TGraph *grcp_NcollModABBCsc[NSYSTEMS][NCENT - 1];
+  TGraph *grcp_NcollABBCscMod[NSYSTEMS][NCENT - 1];
   TGraph *grcp_NcollModABBCscMod_pipT[NSYSTEMS][NCENT - 1];
 
   // for mean BBCs charge
-  double mean_BBCs[NSYSTEMS][NX];
+  double mean_BBCs_NcollModABBCscMod[NSYSTEMS][NX];
+  double mean_BBCs_NcollModABBCsc[NSYSTEMS][NX];
+  double mean_BBCs_NcollABBCscMod[NSYSTEMS][NX];
 
   TGraph *gmean_BBCs[NSYSTEMS];
   TGraph *gmean_BBCs_pipT[NSYSTEMS];
@@ -491,20 +514,40 @@ void calculate_RCP()
 
               hBBCscNcollA[isys][ix]->Fill(c, NcollA * w * NBD * eff);
               hBBCscModNcollModA[isys][ix]->Fill(c, NcollA * wMod * NBD * eff);
-
               hBBCscNcollModA[isys][ix]->Fill(c, NcollA * wModA * NBD * eff);
               hBBCscModNcollA[isys][ix]->Fill(c, NcollA * wModBBCsc * NBD * eff);
 
               hBBCscNcollA_noTrig[isys][ix]->Fill(c, NcollA * w * NBD);
               hBBCscModNcollModA_noTrig[isys][ix]->Fill(c, NcollA * wMod * NBD);
+              hBBCscNcollModA_noTrig[isys][ix]->Fill(c, NcollA * wModA * NBD);
+              hBBCscModNcollA_noTrig[isys][ix]->Fill(c, NcollA * wModBBCsc * NBD);
 
             }
           } // j
         } // iby
       } // ibx
 
+      //-------------------------------------------------------
+      // From here on out, we'll consider three cases:
+      // 1) NcollModABBCscMod:
+      //        Use the modified projectile nucleon Ncoll for weighting
+      //        Use the modified BBC south charge
+      // 1) NcollModABBCsc:
+      //        Use the modified projectile nucleon Ncoll for weighting
+      //        Use the unmodified BBC south charge
+      // 1) NcollABBCscMod:
+      //        Use the unmodified projectile nucleon Ncoll for weighting
+      //        Use the modified BBC south charge
+      //-------------------------------------------------------
+
+
       //-- Deal with charge distributions --//
-      mean_BBCs[isys][ix] = hBBCscModNcollModA[isys][ix]->GetMean();
+      mean_BBCs_NcollModABBCscMod[isys][ix] =
+        hBBCscModNcollModA[isys][ix]->GetMean();
+      mean_BBCs_NcollModABBCsc[isys][ix] =
+        hBBCscNcollModA[isys][ix]->GetMean();
+      mean_BBCs_NcollABBCscMod[isys][ix] =
+        hBBCscModNcollA[isys][ix]->GetMean();
 
       //-- Calculate RCP --//
       // get the BBCcs limits for each centrality bin
@@ -585,6 +628,12 @@ void calculate_RCP()
         rcp_NcollModABBCscMod[isys][icent][ix] = bias_NcollModABBCscMod[isys][ix][icent];
         rcp_NcollModABBCscMod[isys][icent][ix] /= bias_NcollModABBCscMod[isys][ix][NCENT - 1];
 
+        rcp_NcollModABBCsc[isys][icent][ix] = bias_NcollModABBCsc[isys][ix][icent];
+        rcp_NcollModABBCsc[isys][icent][ix] /= bias_NcollModABBCsc[isys][ix][NCENT - 1];
+
+        rcp_NcollABBCscMod[isys][icent][ix] = bias_NcollABBCscMod[isys][ix][icent];
+        rcp_NcollABBCscMod[isys][icent][ix] /= bias_NcollABBCscMod[isys][ix][NCENT - 1];
+
         // cout << "   " << centl[isys][icent] << " - " << centl[isys][icent + 1] << ": "
         //      << rcp_NcollModABBCscMod[isys][icent][ix]
         //      << endl;
@@ -593,16 +642,31 @@ void calculate_RCP()
       //-- Calculate the 0-100% modification and RAA --//
       double yieldA_MB = hBBCscNcollA_noTrig[isys][ix]->Integral();
       double yieldA_NcollModABBCscMod_MB = hBBCscModNcollModA_noTrig[isys][ix]->Integral();
-      bias_NcollModABBCscMod_MB[isys][ix] = yieldA_NcollModABBCscMod_MB / yieldA_MB;
+      double yieldA_NcollModABBCsc_MB = hBBCscNcollModA_noTrig[isys][ix]->Integral();
+      double yieldA_NcollABBCscMod_MB = hBBCscModNcollModA_noTrig[isys][ix]->Integral();
 
+      bias_NcollModABBCscMod_MB[isys][ix] = yieldA_NcollModABBCscMod_MB / yieldA_MB;
+      bias_NcollModABBCsc_MB[isys][ix] = yieldA_NcollModABBCsc_MB / yieldA_MB;
+      bias_NcollABBCscMod_MB[isys][ix] = yieldA_NcollABBCscMod_MB / yieldA_MB;
+
+      // Scale by the MB modification
+      //  argument is that this modification will be present in pp, and
+      //  therefore should cancel in MB RAA. This scaling enforces that
+      //  assumption
       for (int icent = 0; icent < NCENT; icent++)
       {
         raa_NcollModABBCscMod[isys][icent][ix] = bias_NcollModABBCscMod[isys][ix][icent];
         raa_NcollModABBCscMod[isys][icent][ix] /= bias_NcollModABBCscMod_MB[isys][ix];
+
+        raa_NcollModABBCsc[isys][icent][ix] = bias_NcollModABBCsc[isys][ix][icent];
+        raa_NcollModABBCsc[isys][icent][ix] /= bias_NcollModABBCsc_MB[isys][ix];
+
+        // raa_NcollABBCscMod[isys][icent][ix] = bias_NcollABBCscMod[isys][ix][icent];
+        // raa_NcollABBCscMod[isys][icent][ix] /= bias_NcollABBCscMod_MB[isys][ix];
       }
 
 
-
+      //-- Make the centrality selected charge distribution for later plotting
       if (ix == 0)
       {
         for (int icent = 0; icent < NCENT; icent++)
@@ -622,19 +686,89 @@ void calculate_RCP()
 
     } // ix
 
+
+    //-- Define RAA graphs
+    for (int icent = 0; icent < NCENT; icent++)
+    {
+      graa_NcollModABBCscMod[isys][icent] = new TGraph(NX,
+          x,
+          raa_NcollModABBCscMod[isys][icent]);
+      graa_NcollModABBCscMod[isys][icent]->SetName(
+        Form("graa_NcollModABBCscMod_%i_%i", isys, icent));
+      graa_NcollModABBCscMod[isys][icent]->SetTitle(";x_{p};R_{AA}");
+      graa_NcollModABBCscMod[isys][icent]->SetLineStyle(1);
+      graa_NcollModABBCscMod[isys][icent]->SetLineWidth(2);
+      graa_NcollModABBCscMod[isys][icent]->SetLineColor(colors[isys]);
+      graa_NcollModABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
+
+      graa_NcollModABBCsc[isys][icent] = new TGraph(NX,
+          x,
+          raa_NcollModABBCsc[isys][icent]);
+      graa_NcollModABBCsc[isys][icent]->SetName(
+        Form("graa_NcollModABBCsc_%i_%i", isys, icent));
+      graa_NcollModABBCsc[isys][icent]->SetTitle(";x_{p};R_{AA}");
+      graa_NcollModABBCsc[isys][icent]->SetLineStyle(1);
+      graa_NcollModABBCsc[isys][icent]->SetLineWidth(2);
+      graa_NcollModABBCsc[isys][icent]->SetLineColor(colors[isys]);
+      graa_NcollModABBCsc[isys][icent]->SetLineStyle(lstyle[isys]);
+
+      graa_NcollABBCscMod[isys][icent] = new TGraph(NX,
+          x,
+          raa_NcollABBCscMod[isys][icent]);
+      graa_NcollABBCscMod[isys][icent]->SetName(
+        Form("graa_NcollABBCscMod_%i_%i", isys, icent));
+      graa_NcollABBCscMod[isys][icent]->SetTitle(";x_{p};R_{AA}");
+      graa_NcollABBCscMod[isys][icent]->SetLineStyle(1);
+      graa_NcollABBCscMod[isys][icent]->SetLineWidth(2);
+      graa_NcollABBCscMod[isys][icent]->SetLineColor(colors[isys]);
+      graa_NcollABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
+    }
+
+    //-- Define Rcp graphs
     for (int icent = 0; icent < NCENT - 1; icent++)
     {
-      grcp_NcollModABBCscMod[isys][icent] = new TGraph(NX, x, rcp_NcollModABBCscMod[isys][icent]);
-      grcp_NcollModABBCscMod[isys][icent]->SetName(Form("grcp_NcollModABBCscMod_%i_%i", isys, icent));
-      grcp_NcollModABBCscMod[isys][icent]->SetTitle(";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+      grcp_NcollModABBCscMod[isys][icent] = new TGraph(NX,
+          x,
+          rcp_NcollModABBCscMod[isys][icent]);
+      grcp_NcollModABBCscMod[isys][icent]->SetName(
+        Form("grcp_NcollModABBCscMod_%i_%i", isys, icent));
+      grcp_NcollModABBCscMod[isys][icent]->SetTitle(
+        ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
       grcp_NcollModABBCscMod[isys][icent]->SetLineStyle(1);
       grcp_NcollModABBCscMod[isys][icent]->SetLineWidth(2);
       grcp_NcollModABBCscMod[isys][icent]->SetLineColor(colors[isys]);
       grcp_NcollModABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
 
+      grcp_NcollModABBCsc[isys][icent] = new TGraph(NX,
+          x,
+          rcp_NcollModABBCsc[isys][icent]);
+      grcp_NcollModABBCsc[isys][icent]->SetName(
+        Form("grcp_NcollModABBCsc_%i_%i", isys, icent));
+      grcp_NcollModABBCsc[isys][icent]->SetTitle(
+        ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+      grcp_NcollModABBCsc[isys][icent]->SetLineStyle(1);
+      grcp_NcollModABBCsc[isys][icent]->SetLineWidth(2);
+      grcp_NcollModABBCsc[isys][icent]->SetLineColor(colors[isys]);
+      grcp_NcollModABBCsc[isys][icent]->SetLineStyle(lstyle[isys]);
+
+      grcp_NcollABBCscMod[isys][icent] = new TGraph(NX,
+          x,
+          rcp_NcollABBCscMod[isys][icent]);
+      grcp_NcollABBCscMod[isys][icent]->SetName(
+        Form("grcp_NcollABBCscMod_%i_%i", isys, icent));
+      grcp_NcollABBCscMod[isys][icent]->SetTitle(
+        ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+      grcp_NcollABBCscMod[isys][icent]->SetLineStyle(1);
+      grcp_NcollABBCscMod[isys][icent]->SetLineWidth(2);
+      grcp_NcollABBCscMod[isys][icent]->SetLineColor(colors[isys]);
+      grcp_NcollABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
+
       // vs pion pT
-      grcp_NcollModABBCscMod_pipT[isys][icent] = new TGraph(NX, pi0_pT, rcp_NcollModABBCscMod[isys][icent]);
-      grcp_NcollModABBCscMod_pipT[isys][icent]->SetName(Form("grcp_NcollModABBCscMod_pipT_%i_%i", isys, icent));
+      grcp_NcollModABBCscMod_pipT[isys][icent] = new TGraph(NX,
+          pi0_pT,
+          rcp_NcollModABBCscMod[isys][icent]);
+      grcp_NcollModABBCscMod_pipT[isys][icent]->SetName(
+        Form("grcp_NcollModABBCscMod_pipT_%i_%i", isys, icent));
       grcp_NcollModABBCscMod_pipT[isys][icent]->SetTitle(";#pi p_{T};R_{CP}");
       grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineStyle(1);
       grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineWidth(2);
@@ -643,48 +777,42 @@ void calculate_RCP()
 
     }
 
-    double denom = mean_BBCs[isys][0];
+    //-- scale the <BBCsc> by the unmodified value (x=0)
+    double denom = mean_BBCs_NcollModABBCscMod[isys][0];
     for (int ix = 0; ix < NX; ix++)
-      mean_BBCs[isys][ix] = mean_BBCs[isys][ix] / denom;
+      mean_BBCs_NcollModABBCscMod[isys][ix] =
+        mean_BBCs_NcollModABBCscMod[isys][ix] / denom;
 
-    gmean_BBCs[isys] = new TGraph(NX, x, mean_BBCs[isys]);
+    gmean_BBCs[isys] = new TGraph(NX, x, mean_BBCs_NcollModABBCscMod[isys]);
     gmean_BBCs[isys]->SetName(Form("gmean_BBCs_%i", isys));
     gmean_BBCs[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
     gmean_BBCs[isys]->SetLineWidth(2);
     gmean_BBCs[isys]->SetLineColor(colors[isys]);
     gmean_BBCs[isys]->SetLineStyle(lstyle[isys]);
 
-    gmean_BBCs_pipT[isys] = new TGraph(NX, pi0_pT, mean_BBCs[isys]);
+    gmean_BBCs_pipT[isys] = new TGraph(NX,
+                                       pi0_pT,
+                                       mean_BBCs_NcollModABBCscMod[isys]);
     gmean_BBCs_pipT[isys]->SetName(Form("gmean_BBCs_%i", isys));
-    gmean_BBCs_pipT[isys]->SetTitle(Form(";#pi p_{T} = 0.6#frac{#sqrt{s}*x}{2};<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
+    gmean_BBCs_pipT[isys]->SetTitle(
+      Form(";#pi p_{T} = 0.6#frac{#sqrt{s}*x}{2};<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
     gmean_BBCs_pipT[isys]->SetLineWidth(2);
     gmean_BBCs_pipT[isys]->SetLineColor(colors[isys]);
     gmean_BBCs_pipT[isys]->SetLineStyle(lstyle[isys]);
 
 
-    for (int icent = 0; icent < NCENT; icent++)
-    {
-      graa_NcollModABBCscMod[isys][icent] = new TGraph(NX, x, raa_NcollModABBCscMod[isys][icent]);
-      graa_NcollModABBCscMod[isys][icent]->SetName(Form("graa_NcollModABBCscMod_%i_%i", isys, icent));
-      graa_NcollModABBCscMod[isys][icent]->SetTitle(";x_{p};R_{AA}");
-      graa_NcollModABBCscMod[isys][icent]->SetLineStyle(1);
-      graa_NcollModABBCscMod[isys][icent]->SetLineWidth(2);
-      graa_NcollModABBCscMod[isys][icent]->SetLineColor(colors[isys]);
-      graa_NcollModABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
-    }
 
   } // isys
 
-//=====================================================//
-// Run 8 d+Au Jet Rcp
-//=====================================================//
+  //=====================================================//
+  // Run 8 d+Au Jet Rcp
+  //=====================================================//
   cout << endl;
   cout << "--> Run 8 d+Au Jet Rcp";
 
-// Run 8 d+Au Jet RCP
-// http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1222/dvp-dAuJet-FinalResults-Note-03.pdf
-// 0-20% / 60-88%
-
+  // Run 8 d+Au Jet RCP
+  // http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1222/dvp-dAuJet-FinalResults-Note-03.pdf
+  // 0-20% / 60-88%
   const int NJET = 8;
   double pTl_jet[NJET] = {12.1, 14.5, 17.3, 20.7, 24.7, 29.4, 35.1, 41.9};
   double pTh_jet[NJET] = {14.5, 17.3, 20.7, 24.7, 29.4, 35.1, 41.9, 50.0};
@@ -889,79 +1017,6 @@ void calculate_RCP()
   double xe_JdA[NPPG128] = {0};
 
 
-  // // Require pT_trg>1 && pT_assoc>1
-  // const int NPPG128 = 9;
-  // double pT_trg[] =
-  // {
-  //   1.25, 1.75, 2.53,
-  //   0.68, 1.29, 2.43, 2.71, 3.35, 4.67,
-  // };
-  // double pT_assoc[] =
-  // {
-  //   1.250, 1.250, 1.250,
-  //   1.250, 1.250, 1.250, 1.250, 1.250, 1.250,
-  // };
-  // double eta_trg[] =
-  // {
-  //   3.30, 3.30, 3.30,
-  //   0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
-  // };
-  // double eta_assoc = 3.3;
-  // double JdA[2][NPPG128] =
-  // {
-  //   {
-  //     0.102, 0.235, 0.390,
-  //     0.365, 0.432, 0.478, 0.630, 0.748, 0.520,
-  //   }, // 0-20%
-  //   {
-  //     0.570, 0.720, 1.549,
-  //     0.984, 1.054, 1.349, 1.090, 1.134, 0.930,
-  //   }, // 60-88%
-  // };
-  // double JdA_A[2][NPPG128] =
-  // {
-  //   {
-  //     0.021, 0.060, 0.114,
-  //     0.048, 0.116, 0.162, 0.095, 0.121, 0.172,
-  //   }, // 00-20%
-  //   {
-  //     0.075, 0.173, 0.408,
-  //     0.268, 0.293, 0.508, 0.215, 0.194, 0.367,
-  //   }, //60-88%
-  // };
-  // double JdA_Bl[2][NPPG128] =
-  // {
-  //   {
-  //     0.030, 0.082, 0.162,
-  //     0.062, 0.070, 0.067, 0.178, 0.126, 0.090,
-  //   }, //00-20%
-  //   {
-  //     0.114, 0.190, 0.538,
-  //     0.160, 0.162, 0.168, 0.245, 0.259, 0.142,
-  //   }, // 60-88%
-  // };
-  // double JdA_Bh[2][NPPG128] =
-  // {
-  //   {
-  //     0.098, 0.168, 0.229,
-  //     0.062, 0.070, 0.067, 0.178, 0.126, 0.090,
-  //   }, // 00-20%
-  //   {
-  //     0.218, 0.256, 0.532,
-  //     0.160, 0.162, 0.168, 0.245, 0.259, 0.142,
-  //   }, // 60-88%
-  // };
-  // double xAu_frag[] =
-  // {
-  //   4.61e-4, 5.53e-4, 6.97e-4,
-  //   3.63e-3, 6.68e-3, 1.24e-2, 1.38e-2, 1.70e-2, 2.36e-2,
-  // };
-
-
-
-
-
-
   double zfrag = 0.6;
   for (int j = 0; j < NPPG128; j++)
   {
@@ -1061,7 +1116,7 @@ void calculate_RCP()
         gJdA_hpt[k]->SetPointError(hpt, 0, JdA_A[k][j]);
 
         bJdA_hpt[k][hpt] = new TBox(x1, y1, x2, y2);
-        bJdA_hpt[k][hpt]->SetFillColorAlpha(kGreen+1, 0.6);
+        bJdA_hpt[k][hpt]->SetFillColorAlpha(kGreen + 1, 0.6);
 
         hpt++;
       }
@@ -1086,7 +1141,7 @@ void calculate_RCP()
   TBox *bJcp[NPPG128];
   TGraphErrors *gJcp_hpt = new TGraphErrors();
   gJcp_hpt->SetMarkerStyle(21);
-  gJcp_hpt->SetMarkerColor(kGreen+2);
+  gJcp_hpt->SetMarkerColor(kGreen + 2);
   TBox *bJcp_hpt[NPPG128];
   lpt = 0; //reset counter
   hpt = 0; //reset counter
@@ -1112,7 +1167,7 @@ void calculate_RCP()
       gJcp_hpt->SetPointError(hpt, 0, Jcp_A[j]);
 
       bJcp_hpt[hpt] = new TBox(x1, y1, x2, y2);
-      bJcp_hpt[hpt]->SetFillColorAlpha(kGreen+1, 0.6);
+      bJcp_hpt[hpt]->SetFillColorAlpha(kGreen + 1, 0.6);
 
       hpt++;
     }
@@ -1329,6 +1384,13 @@ void calculate_RCP()
                    "L");
   }
 
+  TLegend *legmod = new TLegend(0.8, 0.5, 0.98, 0.98);
+  legmod->SetFillStyle(0);
+  legmod->SetBorderSize(0);
+  legmod->SetTextSize(0.04);
+  legmod->AddEntry(graa_NcollModABBCscMod)
+
+
   //=====================================================//
   // PLOT
   //=====================================================//
@@ -1443,66 +1505,6 @@ void calculate_RCP()
 
   }
 
-
-  TCanvas *cjda = new TCanvas("cjda", "jda", 800, 1000);
-  cjda->Divide(1, 2, 0, 0);
-
-  cjda->GetPad(1)->SetTopMargin(0.10);
-  cjda->GetPad(1)->SetRightMargin(0.02);
-  cjda->GetPad(1)->SetBottomMargin(0.00);
-  cjda->GetPad(1)->SetLeftMargin(0.10);
-  cjda->GetPad(1)->SetTicks(0, 1);
-
-  cjda->GetPad(2)->SetTopMargin(0.00);
-  cjda->GetPad(2)->SetRightMargin(0.02);
-  cjda->GetPad(2)->SetBottomMargin(0.10);
-  cjda->GetPad(2)->SetLeftMargin(0.10);
-  cjda->GetPad(2)->SetTicks(1, 1);
-
-  cjda->cd(1);
-  haxis_JdA->GetYaxis()->SetRangeUser(0, 1.1);
-  haxis_JdA->DrawCopy();
-
-  TGaxis *gx = new TGaxis(xp_JdA[0], 1.1, xp_JdA[8], 1.1,
-                          xAu_frag[0], xAu_frag[8],
-                          510, "-S");
-  gx->SetTickLength(0.1);
-  // gx->SetAxisColor(kRed);
-  gx->SetTitle("x_{Au}^{frag}");
-  gx->SetLineColor(kRed);
-  gx->SetTitleColor(kRed);
-  gx->SetLabelColor(kRed);
-  gx->Draw("same");
-
-
-  for (int j = 0; j < NPPG128; j++)
-    bJdA[0][j]->Draw("same");
-  gJdA[0]->Draw("P");
-
-  graa_NcollModABBCscMod[1][0]->Draw("C");
-
-  l1.DrawLine(0, 1, 1.0, 1);
-  label.DrawLatex(0.3, 0.1, "0-20%");
-
-  cjda->cd(2);
-  haxis_JdA->GetYaxis()->SetRangeUser(0, 2.0);
-  haxis_JdA->DrawCopy();
-
-  for (int j = 0; j < NPPG128; j++)
-    bJdA[1][j]->Draw("same");
-  gJdA[1]->Draw("P");
-
-  graa_NcollModABBCscMod[1][NCENT - 1]->Draw("C");
-
-  l1.DrawLine(0, 1, 1.0, 1);
-  label.DrawLatex(0.3, 0.2, "60-88%");
-
-
-
-
-  TCanvas *cx = new TCanvas("cx", "x", 600, 600);
-  cx->cd(1);
-  gxp_xAu->Draw("AP");
 
 
   TCanvas *cbbc = new TCanvas("cbbc", "bbc", 600, 1200);
