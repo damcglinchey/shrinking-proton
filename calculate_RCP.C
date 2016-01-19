@@ -345,6 +345,7 @@ void calculate_RCP()
   cout << endl;
   cout << "--> Reading Ntuples from files ..." << endl;
 
+  // loop over each collision system
   for (int isys = 0; isys < NSYSTEMS; isys++)
   {
     cout << "------------------------------" << endl;
@@ -357,6 +358,7 @@ void calculate_RCP()
 
     ftrigeff->SetParameters(eff_par[isys][0], eff_par[isys][1]);
 
+    // loop over the glauber output for each x in a given collision system
     for (int ix = 0; ix < NX; ix++)
     {
       fin = TFile::Open(xFiles[isys][ix]);
