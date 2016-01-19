@@ -1285,15 +1285,6 @@ void calculate_RCP()
   label.SetNDC();
   label.SetTextAlign(22);
 
-  TH1F* haxis_rcp = new TH1F("haxis_rcp",
-                             ";x (x_{jet}=2 * p_{T}^{jet} / #sqrt{s_{NN}});R_{CP}",
-                             100, 0, 1);
-  haxis_rcp->GetYaxis()->SetTitleOffset(1.3);
-  haxis_rcp->GetXaxis()->SetTitleOffset(1.3);
-  haxis_rcp->GetYaxis()->CenterTitle();
-  haxis_rcp->SetMinimum(0.01);
-  haxis_rcp->SetMaximum(1.09);
-
   TH1F* haxis_rcp_pipT = new TH1F("haxis_rcp_pipT",
                                   ";#pi p_{T};R_{CP}",
                                   100, 0, 20);
@@ -1303,40 +1294,8 @@ void calculate_RCP()
   haxis_rcp_pipT->SetMinimum(0.01);
   haxis_rcp_pipT->SetMaximum(1.09);
 
-  TH1F* haxis_raa = new TH1F("haxis_raa",
-                             ";x_{p};R_{AA}",
-                             100, 0, 1);
-  haxis_raa->GetYaxis()->SetTitleOffset(1.3);
-  haxis_raa->GetXaxis()->SetTitleOffset(1.3);
-  haxis_raa->GetYaxis()->CenterTitle();
-  haxis_raa->SetMinimum(0.01);
-  haxis_raa->SetMaximum(1.99);
-
-  TH1F* haxis_JdA = new TH1F("haxis_JdA", ";x_{p};J_{dA}", 100, 0, 1.);
-  haxis_JdA->SetMinimum(2e-2);
-  haxis_JdA->SetMaximum(2.5);
-
   TLine l1;
   l1.SetLineStyle(2);
-
-  TLegend *legrcp[NCENT - 1];
-  for (int icent = 0; icent < NCENT - 1; icent++)
-  {
-    legrcp[icent] = new TLegend(0.15, 0.15, 0.4, 0.4,
-                                Form("(%.0f-%.0f%%) / (%.0f-%.0f%%)",
-                                     centl[1][icent], centl[1][icent + 1],
-                                     centl[1][NCENT - 1], centl[1][NCENT]));
-    legrcp[icent]->SetFillStyle(0);
-    legrcp[icent]->SetBorderSize(0);
-    legrcp[icent]->SetTextSize(0.04);
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-    {
-      legrcp[icent]->AddEntry(grcp_NcollModABBCscMod[isys][icent],
-                              collSystem[isys], "L");
-    }
-    legrcp[icent]->AddEntry(gRCP_jet[icent], "PHENIX, arXiv:1509.04657", "P");
-
-  }
 
   int xplot = 2;
 
@@ -1441,15 +1400,6 @@ void calculate_RCP()
 
   }
 
-  TLegend *legQ = new TLegend(0.15, 0.15, 0.5, 0.4);
-  legQ->SetFillStyle(0);
-  legQ->SetBorderSize(0);
-  legQ->SetTextSize(0.04);
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-  {
-    legQ->AddEntry(gmean_BBCs_NcollABBCscMod[isys], collSystem[isys], "L");
-  }
-
   TLegend *legx = new TLegend(0.8, 0.5, 0.98, 0.98);
   legx->SetFillStyle(0);
   legx->SetBorderSize(0);
@@ -1480,43 +1430,12 @@ void calculate_RCP()
     legmod[isys]->AddEntry(graa_NcollABBCscMod_MB[isys],
                            "N_{coll} & BBCsc^{Mod}",
                            "L");
-
   }
+
+  
   //=====================================================//
   // PLOT
   //=====================================================//
-
-  TCanvas *crcp = new TCanvas("crcp", "RCP", 1400, 400);
-  crcp->SetTopMargin(0.0);
-  crcp->SetRightMargin(0.0);
-  crcp->SetBottomMargin(0.0);
-  crcp->SetLeftMargin(0.0);
-  crcp->Divide(NCENT - 1, 1, 0, 0);
-
-  for (int icent = 0; icent < NCENT - 1; icent++)
-  {
-    crcp->GetPad(icent + 1)->SetTopMargin(0.02);
-    crcp->GetPad(icent + 1)->SetRightMargin(0.02);
-    crcp->GetPad(icent + 1)->SetBottomMargin(0.10);
-    crcp->GetPad(icent + 1)->SetLeftMargin(0.10);
-    crcp->GetPad(icent + 1)->SetTicks(1, 1);
-
-    crcp->cd(icent + 1);
-    haxis_rcp->GetXaxis()->SetRangeUser(0, 0.5);
-    haxis_rcp->Draw();
-
-    for (int i = 0; i < NJET; i++)
-      bRcp_jet[icent][i]->Draw();
-    gRCP_jet[icent]->Draw("P");
-
-
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-      grcp_NcollModABBCscMod[isys][icent]->Draw("C");
-
-
-    l1.DrawLine(0, 1, 0.5, 1);
-    legrcp[icent]->Draw("same");
-  }
 
   TCanvas *crcppipt = new TCanvas("crcppipt", "RCP", 1400, 400);
   crcppipt->SetTopMargin(0.0);
@@ -1541,62 +1460,7 @@ void calculate_RCP()
       grcp_NcollModABBCscMod_pipT[isys][icent]->Draw("C");
 
     l1.DrawLine(0, 1, 20., 1);
-    legrcp[icent]->Draw("same");
   }
-
-  TCanvas *craa = new TCanvas("craa", "raa", 1000, 1000);
-  craa->SetTopMargin(0);
-  craa->SetRightMargin(0);
-  craa->SetBottomMargin(0);
-  craa->SetLeftMargin(0);
-  craa->Divide(2, 2, 0, 0);
-  for (int icent = 0; icent < NCENT; icent++)
-  {
-    int row = icent / 2;
-    int col = icent % 2;
-    if (row == 0)
-    {
-      craa->GetPad(icent + 1)->SetTopMargin(0.10);
-      craa->GetPad(icent + 1)->SetBottomMargin(0.0);
-    }
-    else
-    {
-      craa->GetPad(icent + 1)->SetTopMargin(0.00);
-      craa->GetPad(icent + 1)->SetBottomMargin(0.10);
-    }
-    if (col == 0)
-    {
-      craa->GetPad(icent + 1)->SetRightMargin(0.00);
-      craa->GetPad(icent + 1)->SetLeftMargin(0.10);
-    }
-    else
-    {
-      craa->GetPad(icent + 1)->SetRightMargin(0.10);
-      craa->GetPad(icent + 1)->SetLeftMargin(0.00);
-    }
-    craa->GetPad(icent + 1)->SetTicks(1, 1);
-
-    craa->cd(icent + 1);
-    haxis_raa->GetXaxis()->SetRangeUser(0, 0.5);
-    haxis_raa->Draw();
-
-    for (int i = 0; i < NJET; i++)
-      bRdAu_jet[icent][i]->Draw();
-    gRdAu_jet[icent]->Draw("P");
-
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-      graa_NcollModABBCscMod[isys][icent]->Draw("L");
-
-    l1.DrawLine(0, 1, 0.5, 1);
-
-    double x1 = col == 0 ? 0.25 : 0.15;
-    double y1 = row == 0 ? 0.85 : 0.95;
-    label.DrawLatex(x1, y1,
-                    Form("%.0f - %.0f%%", centl[1][icent], centl[1][icent + 1]));
-
-  }
-
-
 
   TCanvas *cbbc = new TCanvas("cbbc", "bbc", 600, 1200);
   cbbc->SetTopMargin(0.00);
@@ -1711,89 +1575,6 @@ void calculate_RCP()
       legNcoll[isys][icent]->Draw("same");
     }
   }
-
-  TCanvas *cq = new TCanvas("cq", "<Q>", 900, 600);
-  cq->SetTopMargin(0.02);
-  cq->SetRightMargin(0.02);
-  cq->SetBottomMargin(0.10);
-  cq->SetLeftMargin(0.10);
-  cq->SetTicks(1, 1);
-
-  cq->cd(1);
-  gmean_BBCs_pipT[0]->GetYaxis()->SetTitleOffset(1.30);
-  gmean_BBCs_pipT[0]->GetYaxis()->SetRangeUser(0.7, 1.2);
-  gmean_BBCs_pipT[0]->GetXaxis()->SetRangeUser(0, 20);
-  gmean_BBCs_pipT[0]->Draw("AC");
-  for (int isys = 1; isys < NSYSTEMS; isys++)
-    gmean_BBCs_pipT[isys]->Draw("C");
-  l1.DrawLine(0, 1, 0.5, 1);
-  legQ->Draw("same");
-
-
-  TCanvas *cdau = new TCanvas("cdau", "raa dau", 800, 1000);
-  cdau->Divide(2, NCENT + 1);
-
-  for (int i = 1; i <= (2 * (NCENT + 1)); i++)
-  {
-    cdau->GetPad(i)->SetTopMargin(0.02);
-    cdau->GetPad(i)->SetRightMargin(0.02);
-    cdau->GetPad(i)->SetBottomMargin(0.1);
-    cdau->GetPad(i)->SetLeftMargin(0.1);
-    cdau->GetPad(i)->SetTicks(1, 1);
-  }
-
-  cdau->cd(1);
-  haxis_raa->GetXaxis()->SetRangeUser(0, 1.0);
-  haxis_raa->DrawCopy();
-
-  graa_NcollModABBCscMod_MB[1]->Draw("L");
-  graa_NcollModABBCsc_MB[1]->Draw("L");
-  graa_NcollABBCscMod_MB[1]->Draw("L");
-
-  l1.DrawLine(0, 1, 1.0, 1);
-
-  label.DrawLatex(0.2, 0.2, "MB");
-  legmod[1]->Draw("same");
-
-  for (int icent = 0; icent < NCENT; icent++)
-  {
-    cdau->cd(2 * icent + 3);
-    haxis_raa->GetXaxis()->SetRangeUser(0, 1.0);
-    haxis_raa->DrawCopy();
-
-    for (int i = 0; i < NJET; i++)
-      bRdAu_jet[icent][i]->Draw();
-    gRdAu_jet[icent]->Draw("P");
-
-    graa_NcollModABBCscMod[1][icent]->Draw("L");
-    graa_NcollModABBCsc[1][icent]->Draw("L");
-    graa_NcollABBCscMod[1][icent]->Draw("L");
-
-    l1.DrawLine(0, 1, 1.0, 1);
-
-    label.DrawLatex(0.25, 0.85,
-                    Form("%.0f - %.0f%%", centl[1][icent], centl[1][icent + 1]));
-
-  }
-
-  for (int icent = 0; icent < NCENT - 1; icent++)
-  {
-    cdau->cd(2 * icent + 4);
-    haxis_rcp->GetXaxis()->SetRangeUser(0, 0.5);
-    haxis_rcp->DrawCopy();
-
-    for (int i = 0; i < NJET; i++)
-      bRcp_jet[icent][i]->Draw();
-    gRCP_jet[icent]->Draw("P");
-
-    grcp_NcollModABBCscMod[1][icent]->Draw("C");
-    grcp_NcollModABBCsc[1][icent]->Draw("C");
-    grcp_NcollABBCscMod[1][icent]->Draw("C");
-
-
-    l1.DrawLine(0, 1, 0.5, 1);
-  }
-
 
   //=====================================================//
   // FIGURE OBJECTS FOR PAPER
@@ -2276,16 +2057,12 @@ void calculate_RCP()
     cout << endl;
     cout << "--> Saving RCP to " << outFile << endl;
 
-    crcp->Print("Rcp_systems.pdf");
     cyield->Print("yield_systems.pdf");
     cncoll->Print("Ncoll_systems.pdf");
     cncollmb->Print("MBNcoll_systems.pdf");
-    cq->Print("Q_systems.pdf");
     cyieldpau->Print("yield_pAu.pdf");
     crcppipt->Print("Rcp_pipT_systems.pdf");
     cbbc->Print("BBCQ_systems.pdf");
-    craa->Print("RAA_systems.pdf");
-    cdau->Print("RAA_dAu_mods.pdf");
 
     crcp_paper->Print("Rcp_paper.pdf");
     craa_paper->Print("RAA_paper.pdf");
