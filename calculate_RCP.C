@@ -37,6 +37,8 @@
 #include <TLine.h>
 #include <TGaxis.h>
 
+#include <data.h>
+
 #include <iostream>
 #include <iomanip>
 
@@ -73,139 +75,163 @@ void calculate_RCP()
   // SET RUNNING CONDITIONS
   //=====================================================//
 
-  const int NX = 21;             // Number of x values
-  double x[] = {0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
-                0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99
-               };
+  // const int NX = 21;             // Number of x values
+  // double x[] = {0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
+  //               0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99
+  //              };
+  const int NX = 7;
+  double x[NX] = {0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
 
   double beta = 1.5;
 
-  const int NSYSTEMS = 3;
-  const char *collSystem[] = {"pAu", "dAu", "3HeAu"};
+  const int NSYSTEMS = 1;
+  const char *collSystem[] = {"dAu", "dAu", "3HeAu"};
+  // const char *collSystem[] = {"pAu", "dAu", "3HeAu"};
 
   bool saveRcp = true;
   const char *outFile = "Rcp_systems.root";
+  bool printPlots = false;
 
   // Files for each x value for each system
   const char *xFiles[NSYSTEMS][NX] =
   {
-    { // pAu Files
-      "rootfiles/glauber_pau_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x005_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x025_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x045_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x05_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x055_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x06_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x065_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x07_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x075_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x08_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x085_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x09_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x095_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x099_ntuple_100k.root",
+    {
+      "rootfiles/glauber_dau_snn42_beta15_x001_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta15_x010_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta15_x020_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta15_x030_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta15_x040_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta15_x050_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta15_x060_ntuple_100k.root",
     },
-    { // dAu Files
-      "rootfiles/glauber_dau_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x005_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x025_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x045_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x05_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x055_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x06_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x065_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x07_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x075_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x08_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x085_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x09_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x095_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x099_ntuple_100k.root",
-    },
-    { // He3Au Files
-      "rootfiles/glauber_he3au_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x005_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x025_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x045_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x05_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x055_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x06_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x065_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x07_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x075_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x08_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x085_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x09_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x095_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x099_ntuple_100k.root",
-    },
-
   };
+  // for (int isys = 0; isys < NSYSTEMS; isys++)
+  // {
+  //   for (int ix = 0; ix < NX; ix++)
+  //   {
+  //     xFiles[isys][ix] = Form("rootfiles/glauber_dau_snn42_beta%.0f_x%03.0f_ntuple_100k.root", beta * 10, x[ix] * 100);
+  //     cout << xFiles[isys][ix] << endl;
+  //   }
+  // }
+  // const char *xFiles[NSYSTEMS][NX] =
+  // {
+  //   { // pAu Files
+  //     "rootfiles/glauber_pau_snn42_x001_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x005_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x01_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x015_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x02_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x025_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x03_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x035_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x04_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x045_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x05_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x055_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x06_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x065_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x07_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x075_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x08_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x085_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x09_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x095_ntuple_100k.root",
+  //     "rootfiles/glauber_pau_snn42_x099_ntuple_100k.root",
+  //   },
+  //   { // dAu Files
+  //     "rootfiles/glauber_dau_snn42_x001_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x005_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x01_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x015_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x02_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x025_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x03_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x035_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x04_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x045_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x05_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x055_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x06_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x065_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x07_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x075_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x08_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x085_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x09_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x095_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_x099_ntuple_100k.root",
+  //   },
+  //   { // He3Au Files
+  //     "rootfiles/glauber_he3au_snn42_x001_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x005_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x01_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x015_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x02_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x025_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x03_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x035_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x04_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x045_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x05_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x055_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x06_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x065_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x07_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x075_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x08_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x085_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x09_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x095_ntuple_100k.root",
+  //     "rootfiles/glauber_he3au_snn42_x099_ntuple_100k.root",
+  //   },
+
+  // };
 
   // Ntuple name stored in files for each system
   const char *ntpName[NSYSTEMS] =
   {
-    "nt_p_Au", // pAu
+    // "nt_p_Au", // pAu
     "nt_dh_Au", // dAu
-    "nt_He3_Au", // He3Au
+    // "nt_He3_Au", // He3Au
   };
 
   // Centrality bins
   const int NCENT = 4;
   double centl[NSYSTEMS][NCENT + 1] =
   {
-    {0, 20, 40, 60, 84}, // pAu
+    // {0, 20, 40, 60, 84}, // pAu
     {0, 20, 40, 60, 88}, // dAu
-    {0, 20, 40, 60, 88}, // He3Au
+    // {0, 20, 40, 60, 88}, // He3Au
   };
 
   // PHENIX values (last entry is 0-100%)
   double Ncoll_PHENIX[NSYSTEMS][NCENT + 1] =
   {
-    { 8.20, 6.06, 4.43, 2.62, 4.67}, // pAu
+    // { 8.20, 6.06, 4.43, 2.62, 4.67}, // pAu
     {15.1, 10.2, 6.6, 3.2, 7.6}, // dAu
-    {22.37, 14.71, 8.28, 3.38, 10.45}, //HeAu
+    // {22.37, 14.71, 8.28, 3.38, 10.45}, //HeAu
   };
 
   // Negative Binomial Distribution parameters for each system
   double NBD_par[NSYSTEMS][2] =
   {
-    {3.14, 0.47}, //pAu {mu, k}
+    // {3.14, 0.47}, //pAu {mu, k}
     {3.04, 0.46}, //dAu {mu, k}
-    {2.91, 0.55}, //3HeAu {mu, k}
+    // {2.91, 0.55}, //3HeAu {mu, k}
   };
 
   // MB trigger efficiency function parameters
   double eff_par[NSYSTEMS][2] =
   {
-    {1.07552e+00, 6.02328e-01}, // pAu
+    // {1.07552e+00, 6.02328e-01}, // pAu
     {0.897, 0.612}, // dAu (from D. McGlinchey thesis)
-    {1.22134e+00, 5.10114e-01}, // He3Au
+    // {1.22134e+00, 5.10114e-01}, // He3Au
   };
 
   // line colors
-  int colors[NSYSTEMS] = { kRed, kBlue, kGreen + 2};
-  // int lstyle[NSYSTEMS] = {    3,     5,          7};
-  int lstyle[NSYSTEMS] = {4, 1, 7};
+  int colors[] = { kRed, kBlue, kGreen + 2};
+  int lstyle[] = {4, 1, 7};
+  int lineWidth = 3;
 
   // fill colors
   int fcolor_cent[NCENT] = {kBlue, kRed, kGreen + 2, kYellow + 2};
@@ -340,6 +366,9 @@ void calculate_RCP()
   TGraph *graa_NcollModABBCsc_MB[NSYSTEMS];
   TGraph *graa_NcollABBCscMod_MB[NSYSTEMS];
 
+
+
+
   // for Rcp
   double rcp_NcollModABBCscMod[NSYSTEMS][NCENT - 1][NX];
   double rcp_NcollModABBCsc[NSYSTEMS][NCENT - 1][NX];
@@ -367,6 +396,14 @@ void calculate_RCP()
   double pi0_pT[NX] = {0};
   for (int ix = 0; ix < NX; ix++)
     pi0_pT[ix] = 0.6 * 0.5 * x[ix] * 200;
+
+
+  // for testing linear modification due to CNM effects
+  double linCentMod = 0.20;
+  double linPeriphMod = 0.60;
+  TGraph *graa_NcollABBCscMod_linMod[NSYSTEMS][NCENT];
+  TGraph *grcp_NcollABBCscMod_linMod[NSYSTEMS][NCENT - 1];
+
 
   //=====================================================//
   // GET NTUPLE(S) FROM FILE AND CALCULATE YIELD
@@ -719,7 +756,7 @@ void calculate_RCP()
       Form("graa_NcollModABBCscMod_MB_%i", isys));
     graa_NcollModABBCscMod_MB[isys]->SetTitle(";x_{p};R_{AA}");
     graa_NcollModABBCscMod_MB[isys]->SetLineStyle(1);
-    graa_NcollModABBCscMod_MB[isys]->SetLineWidth(2);
+    graa_NcollModABBCscMod_MB[isys]->SetLineWidth(lineWidth);
     graa_NcollModABBCscMod_MB[isys]->SetLineColor(colors[isys]);
     graa_NcollModABBCscMod_MB[isys]->SetLineStyle(lstyle[isys]);
 
@@ -730,7 +767,7 @@ void calculate_RCP()
       Form("graa_NcollModABBCsc_MB_%i", isys));
     graa_NcollModABBCsc_MB[isys]->SetTitle(";x_{p};R_{AA}");
     graa_NcollModABBCsc_MB[isys]->SetLineStyle(1);
-    graa_NcollModABBCsc_MB[isys]->SetLineWidth(2);
+    graa_NcollModABBCsc_MB[isys]->SetLineWidth(lineWidth);
     graa_NcollModABBCsc_MB[isys]->SetLineColor(colors[isys]);
     graa_NcollModABBCsc_MB[isys]->SetLineStyle(4);
 
@@ -741,7 +778,7 @@ void calculate_RCP()
       Form("graa_NcollABBCscMod_MB_%i", isys));
     graa_NcollABBCscMod_MB[isys]->SetTitle(";x_{p};R_{AA}");
     graa_NcollABBCscMod_MB[isys]->SetLineStyle(1);
-    graa_NcollABBCscMod_MB[isys]->SetLineWidth(2);
+    graa_NcollABBCscMod_MB[isys]->SetLineWidth(lineWidth);
     graa_NcollABBCscMod_MB[isys]->SetLineColor(colors[isys]);
     graa_NcollABBCscMod_MB[isys]->SetLineStyle(7);
 
@@ -758,7 +795,7 @@ void calculate_RCP()
         Form("graa_NcollModABBCscMod_%i_%i", isys, icent));
       graa_NcollModABBCscMod[isys][icent]->SetTitle(";x_{p};R_{AA}");
       graa_NcollModABBCscMod[isys][icent]->SetLineStyle(1);
-      graa_NcollModABBCscMod[isys][icent]->SetLineWidth(2);
+      graa_NcollModABBCscMod[isys][icent]->SetLineWidth(lineWidth);
       graa_NcollModABBCscMod[isys][icent]->SetLineColor(colors[isys]);
       graa_NcollModABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
 
@@ -769,7 +806,7 @@ void calculate_RCP()
         Form("graa_NcollModABBCsc_%i_%i", isys, icent));
       graa_NcollModABBCsc[isys][icent]->SetTitle(";x_{p};R_{AA}");
       graa_NcollModABBCsc[isys][icent]->SetLineStyle(1);
-      graa_NcollModABBCsc[isys][icent]->SetLineWidth(2);
+      graa_NcollModABBCsc[isys][icent]->SetLineWidth(lineWidth);
       graa_NcollModABBCsc[isys][icent]->SetLineColor(colors[isys]);
       graa_NcollModABBCsc[isys][icent]->SetLineStyle(lstyle[isys]);
 
@@ -780,9 +817,11 @@ void calculate_RCP()
         Form("graa_NcollABBCscMod_%i_%i", isys, icent));
       graa_NcollABBCscMod[isys][icent]->SetTitle(";x_{p};R_{AA}");
       graa_NcollABBCscMod[isys][icent]->SetLineStyle(1);
-      graa_NcollABBCscMod[isys][icent]->SetLineWidth(2);
+      graa_NcollABBCscMod[isys][icent]->SetLineWidth(lineWidth);
       graa_NcollABBCscMod[isys][icent]->SetLineColor(colors[isys]);
       graa_NcollABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
+
+
     }
 
     //-- Define Rcp graphs
@@ -796,7 +835,7 @@ void calculate_RCP()
       grcp_NcollModABBCscMod[isys][icent]->SetTitle(
         ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
       grcp_NcollModABBCscMod[isys][icent]->SetLineStyle(1);
-      grcp_NcollModABBCscMod[isys][icent]->SetLineWidth(2);
+      grcp_NcollModABBCscMod[isys][icent]->SetLineWidth(lineWidth);
       grcp_NcollModABBCscMod[isys][icent]->SetLineColor(colors[isys]);
       grcp_NcollModABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
 
@@ -808,7 +847,7 @@ void calculate_RCP()
       grcp_NcollModABBCsc[isys][icent]->SetTitle(
         ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
       grcp_NcollModABBCsc[isys][icent]->SetLineStyle(1);
-      grcp_NcollModABBCsc[isys][icent]->SetLineWidth(2);
+      grcp_NcollModABBCsc[isys][icent]->SetLineWidth(lineWidth);
       grcp_NcollModABBCsc[isys][icent]->SetLineColor(colors[isys]);
       grcp_NcollModABBCsc[isys][icent]->SetLineStyle(lstyle[isys]);
 
@@ -820,7 +859,7 @@ void calculate_RCP()
       grcp_NcollABBCscMod[isys][icent]->SetTitle(
         ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
       grcp_NcollABBCscMod[isys][icent]->SetLineStyle(1);
-      grcp_NcollABBCscMod[isys][icent]->SetLineWidth(2);
+      grcp_NcollABBCscMod[isys][icent]->SetLineWidth(lineWidth);
       grcp_NcollABBCscMod[isys][icent]->SetLineColor(colors[isys]);
       grcp_NcollABBCscMod[isys][icent]->SetLineStyle(lstyle[isys]);
 
@@ -832,7 +871,7 @@ void calculate_RCP()
         Form("grcp_NcollModABBCscMod_pipT_%i_%i", isys, icent));
       grcp_NcollModABBCscMod_pipT[isys][icent]->SetTitle(";#pi p_{T};R_{CP}");
       grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineStyle(1);
-      grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineWidth(2);
+      grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineWidth(lineWidth);
       grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineColor(colors[isys]);
       grcp_NcollModABBCscMod_pipT[isys][icent]->SetLineStyle(lstyle[isys]);
 
@@ -850,21 +889,21 @@ void calculate_RCP()
     gmean_BBCs_NcollModABBCscMod[isys] = new TGraph(NX, x, mean_BBCs_NcollModABBCscMod[isys]);
     gmean_BBCs_NcollModABBCscMod[isys]->SetName(Form("gmean_BBCs_NcollModABBCscMod_%i", isys));
     gmean_BBCs_NcollModABBCscMod[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
-    gmean_BBCs_NcollModABBCscMod[isys]->SetLineWidth(2);
+    gmean_BBCs_NcollModABBCscMod[isys]->SetLineWidth(lineWidth);
     gmean_BBCs_NcollModABBCscMod[isys]->SetLineColor(colors[isys]);
     gmean_BBCs_NcollModABBCscMod[isys]->SetLineStyle(lstyle[isys]);
 
     gmean_BBCs_NcollModABBCsc[isys] = new TGraph(NX, x, mean_BBCs_NcollModABBCsc[isys]);
     gmean_BBCs_NcollModABBCsc[isys]->SetName(Form("gmean_BBCs_NcollModABBCsc_%i", isys));
     gmean_BBCs_NcollModABBCsc[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
-    gmean_BBCs_NcollModABBCsc[isys]->SetLineWidth(2);
+    gmean_BBCs_NcollModABBCsc[isys]->SetLineWidth(lineWidth);
     gmean_BBCs_NcollModABBCsc[isys]->SetLineColor(colors[isys]);
     gmean_BBCs_NcollModABBCsc[isys]->SetLineStyle(lstyle[isys]);
 
     gmean_BBCs_NcollABBCscMod[isys] = new TGraph(NX, x, mean_BBCs_NcollABBCscMod[isys]);
     gmean_BBCs_NcollABBCscMod[isys]->SetName(Form("gmean_BBCs_NcollABBCscMod_%i", isys));
     gmean_BBCs_NcollABBCscMod[isys]->SetTitle(Form(";x;<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
-    gmean_BBCs_NcollABBCscMod[isys]->SetLineWidth(2);
+    gmean_BBCs_NcollABBCscMod[isys]->SetLineWidth(lineWidth);
     gmean_BBCs_NcollABBCscMod[isys]->SetLineColor(colors[isys]);
     gmean_BBCs_NcollABBCscMod[isys]->SetLineStyle(lstyle[isys]);
 
@@ -874,11 +913,62 @@ void calculate_RCP()
     gmean_BBCs_pipT[isys]->SetName(Form("gmean_BBCs_%i", isys));
     gmean_BBCs_pipT[isys]->SetTitle(
       Form(";#pi p_{T} = 0.6#frac{#sqrt{s}*x}{2};<Q_{BBC, Au}> / <Q_{BBC,Au}(x=%.2f)", x[1]));
-    gmean_BBCs_pipT[isys]->SetLineWidth(2);
+    gmean_BBCs_pipT[isys]->SetLineWidth(lineWidth);
     gmean_BBCs_pipT[isys]->SetLineColor(colors[isys]);
     gmean_BBCs_pipT[isys]->SetLineStyle(lstyle[isys]);
 
 
+    //-- test linear modification due to CNM effects
+    graa_NcollABBCscMod_linMod[isys][0] = new TGraph();
+    graa_NcollABBCscMod_linMod[isys][0]->SetName(
+      Form("graa_NcollABBCscMod_linMod_%i_%i", isys, 0));
+    graa_NcollABBCscMod_linMod[isys][0]->SetTitle(
+      ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+    graa_NcollABBCscMod_linMod[isys][0]->SetLineStyle(1);
+    graa_NcollABBCscMod_linMod[isys][0]->SetLineWidth(lineWidth);
+    graa_NcollABBCscMod_linMod[isys][0]->SetLineColor(colors[isys]);
+    graa_NcollABBCscMod_linMod[isys][0]->SetLineStyle(7);
+
+    graa_NcollABBCscMod_linMod[isys][NCENT - 1] = new TGraph();
+    graa_NcollABBCscMod_linMod[isys][NCENT - 1]->SetName(
+      Form("graa_NcollABBCscMod_linMod_%i_%i", isys, NCENT - 1));
+    graa_NcollABBCscMod_linMod[isys][NCENT - 1]->SetTitle(
+      ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+    graa_NcollABBCscMod_linMod[isys][NCENT - 1]->SetLineStyle(1);
+    graa_NcollABBCscMod_linMod[isys][NCENT - 1]->SetLineWidth(lineWidth);
+    graa_NcollABBCscMod_linMod[isys][NCENT - 1]->SetLineColor(colors[isys]);
+    graa_NcollABBCscMod_linMod[isys][NCENT - 1]->SetLineStyle(7);
+
+    grcp_NcollABBCscMod_linMod[isys][0] = new TGraph();
+    grcp_NcollABBCscMod_linMod[isys][0]->SetName(
+      Form("grcp_NcollABBCscMod_linMod_%i_%i", isys, 0));
+    grcp_NcollABBCscMod_linMod[isys][0]->SetTitle(
+      ";x (x=2 * p_{T} / #sqrt{s_{NN}});R_{CP}");
+    grcp_NcollABBCscMod_linMod[isys][0]->SetLineStyle(1);
+    grcp_NcollABBCscMod_linMod[isys][0]->SetLineWidth(lineWidth);
+    grcp_NcollABBCscMod_linMod[isys][0]->SetLineColor(colors[isys]);
+    grcp_NcollABBCscMod_linMod[isys][0]->SetLineStyle(7);
+
+    int itr = 0;
+    for (int ix = 0; ix < NX; ix++)
+    {
+      if (x[ix] > 0.4)
+      {
+        graa_NcollABBCscMod_linMod[isys][0]->SetPoint(itr,
+            x[ix],
+            linCentMod * raa_NcollABBCscMod[isys][0][ix]);
+
+        graa_NcollABBCscMod_linMod[isys][NCENT - 1]->SetPoint(itr,
+            x[ix],
+            linPeriphMod * raa_NcollABBCscMod[isys][NCENT - 1][ix]);
+
+        grcp_NcollABBCscMod_linMod[isys][0]->SetPoint(itr,
+            x[ix],
+            linCentMod / linPeriphMod * rcp_NcollABBCscMod[isys][0][ix]);
+
+        itr++;
+      }
+    }
 
   } // isys
 
@@ -886,48 +976,9 @@ void calculate_RCP()
   // Run 8 d+Au Jet Rcp
   //=====================================================//
   cout << endl;
-  cout << "--> Run 8 d+Au Jet Rcp";
+  cout << "--> Run 8 d+Au Jet Rcp" << endl;;
 
-  // Run 8 d+Au Jet RCP
-  // http://www.phenix.bnl.gov/phenix/WWW/p/info/an/1222/dvp-dAuJet-FinalResults-Note-03.pdf
-  // 0-20% / 60-88%
-  const int NJET = 8;
-  double pTl_jet[NJET] = {12.1, 14.5, 17.3, 20.7, 24.7, 29.4, 35.1, 41.9};
-  double pTh_jet[NJET] = {14.5, 17.3, 20.7, 24.7, 29.4, 35.1, 41.9, 50.0};
-  double Rcp_jet[NCENT - 1][NJET] = {
-    {0.73, 0.71, 0.66, 0.61, 0.57, 0.54, 0.52, 0.50}, // 00-20% / 60-88%
-    {0.92, 0.88, 0.85, 0.82, 0.76, 0.71, 0.67, 0.63}, // 20-40% / 60-88%
-    {0.98, 0.96, 0.95, 0.93, 0.91, 0.88, 0.86, 0.84}, // 40-60% / 60-88%
-  };
-  double Rcp_jet_A[NCENT - 1][NJET] = {
-    {0.01, 0.01, 0.02, 0.02, 0.02, 0.04, 0.05, 0.06}, // 00-20% / 60-88%
-    {0.01, 0.02, 0.02, 0.02, 0.04, 0.05, 0.07, 0.08}, // 20-40% / 60-88%
-    {0.02, 0.02, 0.02, 0.03, 0.04, 0.07, 0.09, 0.11}, // 40-60% / 60-88%
-  };
-  double Rcp_jet_B[NCENT - 1][NJET] = {
-    {0.06, 0.03, 0.02, 0.02, 0.03, 0.05, 0.08, 0.09}, // 00-20% / 60-88%
-    {0.05, 0.04, 0.03, 0.04, 0.07, 0.11, 0.16, 0.19}, // 20-40% / 60-88%
-    {0.04, 0.05, 0.05, 0.06, 0.05, 0.07, 0.10, 0.12}, // 40-60% / 60-88%
-  };
-
-  double RdAu_jet[NCENT][NJET] = {
-    {0.84, 0.85, 0.82, 0.79, 0.78, 0.78, 0.78, 0.78}, // 00-20%
-    {1.05, 1.06, 1.06, 1.06, 1.05, 1.03, 1.01, 0.99}, // 20-40%
-    {1.12, 1.15, 1.18, 1.21, 1.24, 1.27, 1.29, 1.31}, // 40-60%
-    {1.14, 1.20, 1.25, 1.30, 1.37, 1.45, 1.51, 1.56}, // 60-88%
-  };
-  double RdAu_jet_A[NCENT][NJET] = {
-    {0.01, 0.01, 0.02, 0.02, 0.03, 0.06, 0.08, 0.10}, // 00-20%
-    {0.01, 0.02, 0.02, 0.03, 0.05, 0.08, 0.12, 0.15}, // 20-40%
-    {0.02, 0.02, 0.03, 0.04, 0.06, 0.10, 0.15, 0.19}, // 40-60%
-    {0.02, 0.02, 0.03, 0.04, 0.07, 0.14, 0.23, 0.31}, // 60-88%
-  };
-  double RdAu_jet_B[NCENT][NJET] = {
-    {0.06, 0.04, 0.04, 0.04, 0.05, 0.08, 0.12, 0.15}, // 00-20%
-    {0.05, 0.05, 0.05, 0.05, 0.07, 0.11, 0.14, 0.18}, // 20-40%
-    {0.04, 0.05, 0.04, 0.06, 0.07, 0.10, 0.14, 0.17}, // 40-60%
-    {0.04, 0.05, 0.05, 0.06, 0.07, 0.14, 0.23, 0.31}, // 60-88%
-  };
+  // Data arrays included from data.h
 
   double pT_jet[NJET] = {0};
   double pTe_jet[NJET] = {0};
@@ -992,105 +1043,30 @@ void calculate_RCP()
     }
   }
 
+
+  // calculate the chi2 between the 0-20% RCP and the calculation
+  double chi2 = 0;
+  double NDF = NJET - 1; // data points - free parameters (beta)
+  for (int i = 0; i < NJET; i++)
+  {
+    double m = grcp_NcollABBCscMod[0][0]->Eval(x_jet[i]);
+    double tmp = TMath::Power(Rcp_jet[0][i] - m, 2);
+    tmp /= TMath::Power(Rcp_jet_A[0][i], 2);
+
+    chi2 += tmp;
+  }
+  cout << "-------------" << endl;
+  cout << " chi2/ndf = " << chi2 / NDF << endl;
+  cout << "-------------" << endl;
+
+
   //=====================================================//
   // DI-HADRON CORRELATIONS (PPG128)
   //=====================================================//
   cout << endl;
   cout << "--> Run 8 d+Au dihadron correlations" << endl;
 
-  // From PPG128
-  // http://www.phenix.bnl.gov/phenix/WWW/p/info/ppg/128/tables/phenix_mpc_jda.txt
-  // 0-20%
-  const int NPPG128 = 27;
-  double pT_trg[] =
-  {
-    1.25, 1.75, 2.53, 1.25, 1.75, 2.53, 1.25, 1.75, 2.53,
-    0.68, 1.29, 2.43, 2.71, 3.35, 4.67,
-    0.68, 1.29, 2.43, 2.71, 3.35, 4.67,
-    0.68, 1.29, 2.43, 2.71, 3.35, 4.67,
-  };
-  double pT_assoc[] =
-  {
-    0.625, 0.625, 0.625, 0.875, 0.875, 0.875, 1.250, 1.250, 1.250,
-    0.625, 0.625, 0.625, 0.625, 0.625, 0.625,
-    0.875, 0.875, 0.875, 0.875, 0.875, 0.875,
-    1.250, 1.250, 1.250, 1.250, 1.250, 1.250,
-  };
-  double eta_trg[] =
-  {
-    3.30, 3.30, 3.30, 3.30, 3.30, 3.30, 3.30, 3.30, 3.30,
-    0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
-    0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
-    0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
-  };
-  double eta_assoc = 3.3;
-  double JdA[2][NPPG128] =
-  {
-    {
-      0.093, 0.090, 0.191, 0.077, 0.144, 0.174, 0.102, 0.235, 0.390,
-      0.233, 0.335, 0.407, 0.548, 0.486, 0.572,
-      0.252, 0.375, 0.445, 0.409, 0.531, 0.685,
-      0.365, 0.432, 0.478, 0.630, 0.748, 0.520,
-    }, // 0-20%
-    {
-      0.571, 0.607, 0.820, 1.131, 0.816, 0.728, 0.570, 0.720, 1.549,
-      0.688, 0.821, 0.759, 0.887, 0.916, 0.918,
-      0.659, 1.019, 1.047, 1.103, 1.312, 1.047,
-      0.984, 1.054, 1.349, 1.090, 1.134, 0.930,
-    }, // 60-88%
-  };
-  double JdA_A[2][NPPG128] =
-  {
-    {
-      0.016, 0.021, 0.035, 0.017, 0.034, 0.037, 0.021, 0.060, 0.114,
-      0.023, 0.030, 0.122, 0.052, 0.055, 0.163,
-      0.035, 0.040, 0.128, 0.045, 0.064, 0.212,
-      0.048, 0.116, 0.162, 0.095, 0.121, 0.172,
-    }, // 00-20%
-    {
-      0.061, 0.091, 0.125, 0.108, 0.143, 0.135, 0.075, 0.173, 0.408,
-      0.074, 0.079, 0.236, 0.103, 0.097, 0.151,
-      0.092, 0.117, 0.379, 0.195, 0.283, 0.220,
-      0.268, 0.293, 0.508, 0.215, 0.194, 0.367,
-    }, //60-88%
-  };
-  double JdA_Bl[2][NPPG128] =
-  {
-    {
-      0.036, 0.037, 0.083, 0.024, 0.051, 0.069, 0.030, 0.082, 0.162,
-      0.062, 0.070, 0.067, 0.178, 0.126, 0.090,
-      0.062, 0.070, 0.067, 0.178, 0.126, 0.090,
-      0.062, 0.070, 0.067, 0.178, 0.126, 0.090,
-    }, //00-20%
-    {
-      0.168, 0.192, 0.311, 0.267, 0.228, 0.239, 0.114, 0.190, 0.538,
-      0.160, 0.162, 0.168, 0.245, 0.259, 0.142,
-      0.160, 0.162, 0.168, 0.245, 0.259, 0.142,
-      0.160, 0.162, 0.168, 0.245, 0.259, 0.142,
-    }, // 60-88%
-  };
-  double JdA_Bh[2][NPPG128] =
-  {
-    {
-      0.107, 0.088, 0.160, 0.097, 0.129, 0.137, 0.098, 0.168, 0.229,
-      0.062, 0.070, 0.067, 0.178, 0.126, 0.090,
-      0.062, 0.070, 0.067, 0.178, 0.126, 0.090,
-      0.062, 0.070, 0.067, 0.178, 0.126, 0.090,
-    }, // 00-20%
-    {
-      0.256, 0.297, 0.362, 0.416, 0.308, 0.335, 0.218, 0.256, 0.532,
-      0.160, 0.162, 0.168, 0.245, 0.259, 0.142,
-      0.160, 0.162, 0.168, 0.245, 0.259, 0.142,
-      0.160, 0.162, 0.168, 0.245, 0.259, 0.142,
-    }, // 60-88%
-  };
-  double xAu_frag[] =
-  {
-    3.46e-4, 4.38e-4, 5.82e-4, 3.92e-4, 4.84e-4, 6.28e-4, 4.61e-4, 5.53e-4, 6.97e-4,
-    3.52e-3, 6.57e-3, 1.23e-2, 1.37e-2, 1.69e-2, 2.35e-2,
-    3.56e-3, 6.61e-3, 1.23e-2, 1.37e-2, 1.69e-2, 2.35e-2,
-    3.63e-3, 6.68e-3, 1.24e-2, 1.38e-2, 1.70e-2, 2.36e-2,
-  };
+  // data arrays included from data.h
   double xp_JdA[NPPG128] = {};
   double xe_JdA[NPPG128] = {0};
 
@@ -1150,108 +1126,90 @@ void calculate_RCP()
 
 
 
-
-  TGraphErrors *gJdA[2];
-  TBox *bJdA[2][NPPG128];
-  TGraphErrors *gJdA_hpt[2];
-  TBox *bJdA_hpt[2][NPPG128];
-  int lpt = 0; //counter for low pT points
-  int hpt = 0; //counter for high pT points
-  for (int k = 0; k < 2; k++)
+  const int NXBINS = 3;
+  float xbins[] = {1e-4, 1e-3, 1e-2, 1e-1};
+  float xmin_xbins[NXBINS] = {0};
+  float xmax_xbins[NXBINS] = {0};
+  int xbinColor[] = {kBlack, kMagenta + 2, kOrange + 2};
+  TGraphErrors *gJdA[NXBINS][2];
+  TGraphErrors *gJcp[NXBINS];
+  TBox *bJdA[NXBINS][2][NPPG128];
+  TBox *bJcp[NXBINS][NPPG128];
+  int nxjda[NXBINS] = {0};
+  for (int ix = 0; ix < NXBINS; ix++)
   {
-    lpt = 0;
-    hpt = 0;
+    //-- JdA
+    for (int k = 0; k < 2; k++)
+    {
+      nxjda[ix] = 0;
 
-    // gJdA[k] = new TGraphErrors(NPPG128, xp_JdA, JdA[k], xe_JdA, JdA_A[k]);
-    gJdA[k] = new TGraphErrors();
-    gJdA[k]->SetMarkerStyle(20);
-    gJdA[k]->SetMarkerColor(kBlack);
+      gJdA[ix][k] = new TGraphErrors();
+      gJdA[ix][k]->SetMarkerStyle(20 + ix);
+      gJdA[ix][k]->SetMarkerColor(xbinColor[ix]);
 
-    gJdA_hpt[k] = new TGraphErrors();
-    gJdA_hpt[k]->SetMarkerStyle(21);
-    gJdA_hpt[k]->SetMarkerColor(kGreen + 2);
+      for (int j = 0; j < NPPG128; j++)
+      {
+        double x1 = xp_JdA[j] - 0.01;// * xp_JdA[j];
+        double x2 = xp_JdA[j] + 0.01;// * xp_JdA[j];
+        double y1 = JdA[k][j] - JdA_Bl[k][j];
+        double y2 = JdA[k][j] + JdA_Bh[k][j];
 
+        if (xAu_frag[j] > xbins[ix] && xAu_frag[j] < xbins[ix + 1])
+        {
+          gJdA[ix][k]->SetPoint(nxjda[ix], xp_JdA[j], JdA[k][j]);
+          gJdA[ix][k]->SetPointError(nxjda[ix], 0, JdA_A[k][j]);
+
+          bJdA[ix][k][nxjda[ix]] = new TBox(x1, y1, x2, y2);
+          bJdA[ix][k][nxjda[ix]]->SetFillColorAlpha(kGray, 0.6);
+
+          nxjda[ix]++;
+
+
+        }
+      } // j
+    } // k
+
+    //-- Jcp
+    gJcp[ix] = new TGraphErrors();
+    gJcp[ix]->SetMarkerStyle(20 + ix);
+    gJcp[ix]->SetMarkerColor(xbinColor[ix]);
+
+    nxjda[ix] = 0;
 
     for (int j = 0; j < NPPG128; j++)
     {
       double x1 = xp_JdA[j] - 0.01;// * xp_JdA[j];
       double x2 = xp_JdA[j] + 0.01;// * xp_JdA[j];
-      double y1 = JdA[k][j] - JdA_Bl[k][j];
-      double y2 = JdA[k][j] + JdA_Bh[k][j];
-      if (pT_assoc[j] < 1.0 || pT_trg[j] < 1.0)
+      double y1 = Jcp[j] - Jcp_Bl[j];
+      double y2 = Jcp[j] + Jcp_Bh[j];
+
+      if (xAu_frag[j] > xbins[ix] && xAu_frag[j] < xbins[ix + 1])
       {
-        gJdA[k]->SetPoint(lpt, xp_JdA[j], JdA[k][j]);
-        gJdA[k]->SetPointError(lpt, 0, JdA_A[k][j]);
+        gJcp[ix]->SetPoint(nxjda[ix], xp_JdA[j], Jcp[j]);
+        gJcp[ix]->SetPointError(nxjda[ix], 0, Jcp_A[j]);
 
-        bJdA[k][lpt] = new TBox(x1, y1, x2, y2);
-        bJdA[k][lpt]->SetFillColorAlpha(kGray, 0.6);
+        bJcp[ix][nxjda[ix]] = new TBox(x1, y1, x2, y2);
+        // bJcp[ix][nxjda[ix]]->SetFillColorAlpha(kMagenta - 3 + ix, 0.6);
+        bJcp[ix][nxjda[ix]]->SetFillColorAlpha(kGray, 0.6);
 
-        lpt++;
+        nxjda[ix]++;
       }
-      else
+    } // j
+
+    // find the min/max xAu values
+    for (int j = 0; j < NPPG128; j++)
+    {
+      if (j == 0) xmin_xbins[ix] = 1;
+
+      if (xAu_frag[j] > xbins[ix] && xAu_frag[j] < xbins[ix + 1])
       {
-        gJdA_hpt[k]->SetPoint(hpt, xp_JdA[j], JdA[k][j]);
-        gJdA_hpt[k]->SetPointError(hpt, 0, JdA_A[k][j]);
-
-        bJdA_hpt[k][hpt] = new TBox(x1, y1, x2, y2);
-        bJdA_hpt[k][hpt]->SetFillColorAlpha(kGreen + 1, 0.6);
-
-        hpt++;
+        if (xAu_frag[j] < xmin_xbins[ix]) xmin_xbins[ix] = xAu_frag[j];
+        if (xAu_frag[j] > xmax_xbins[ix]) xmax_xbins[ix] = xAu_frag[j];
       }
-
-
-      bJdA[k][j] = new TBox(x1, y1, x2, y2);
-      bJdA[k][j]->SetFillColorAlpha(kGray, 0.6);
     }
-  }
 
-  cout << "  JdA lpt: " << lpt << " hpt: " << hpt << endl;
+  } // ix
 
-  TGraph *gxp_xAu = new TGraph(NPPG128, xp_JdA, xAu_frag);
-  gxp_xAu->SetMarkerStyle(20);
-
-  // TGraphErrors *gJcp = new TGraphErrors(NPPG128,
-  //                                       xp_JdA, Jcp,
-  //                                       xe_JdA, Jcp_A);
-  TGraphErrors *gJcp = new TGraphErrors();
-  gJcp->SetMarkerStyle(20);
-  gJcp->SetMarkerColor(kBlack);
-  TBox *bJcp[NPPG128];
-  TGraphErrors *gJcp_hpt = new TGraphErrors();
-  gJcp_hpt->SetMarkerStyle(21);
-  gJcp_hpt->SetMarkerColor(kGreen + 2);
-  TBox *bJcp_hpt[NPPG128];
-  lpt = 0; //reset counter
-  hpt = 0; //reset counter
-  for (int j = 0; j < NPPG128; j++)
-  {
-    double x1 = xp_JdA[j] - 0.01;// * xp_JdA[j];
-    double x2 = xp_JdA[j] + 0.01;// * xp_JdA[j];
-    double y1 = Jcp[j] - Jcp_Bl[j];
-    double y2 = Jcp[j] + Jcp_Bh[j];
-    if (pT_trg[j] < 1.0 || pT_assoc[j] < 1.0)
-    {
-      gJcp->SetPoint(lpt, xp_JdA[j], Jcp[j]);
-      gJcp->SetPointError(lpt, 0, Jcp_A[j]);
-
-      bJcp[lpt] = new TBox(x1, y1, x2, y2);
-      bJcp[lpt]->SetFillColorAlpha(kGray, 0.6);
-
-      lpt++;
-    }
-    else
-    {
-      gJcp_hpt->SetPoint(hpt, xp_JdA[j], Jcp[j]);
-      gJcp_hpt->SetPointError(hpt, 0, Jcp_A[j]);
-
-      bJcp_hpt[hpt] = new TBox(x1, y1, x2, y2);
-      bJcp_hpt[hpt]->SetFillColorAlpha(kGreen + 1, 0.6);
-
-      hpt++;
-    }
-  }
-
-  cout << "  Jcp lpt: " << lpt << " hpt: " << hpt << endl;
 
   TGraphErrors *gJdA_rat[2];
   TBox *bJdA_rat[2][NPPG128];
@@ -1310,8 +1268,8 @@ void calculate_RCP()
     hBBCscNcollModA[isys][xplot]->SetLineColor(kGreen + 2);
     hBBCscModNcollModA[isys][xplot]->SetLineColor(kRed);
 
-    hBBCscNcollA[isys][xplot]->SetLineWidth(2);
-    hBBCscModNcollModA[isys][xplot]->SetLineWidth(2);
+    hBBCscNcollA[isys][xplot]->SetLineWidth(lineWidth);
+    hBBCscModNcollModA[isys][xplot]->SetLineWidth(lineWidth);
 
     legBBC[isys] = new TLegend(0.15, 0.15, 0.4, 0.4,
                                Form("%s @ 200 GeV, x = %.2f",
@@ -1328,8 +1286,8 @@ void calculate_RCP()
     hNcoll_MB[isys][xplot]->SetLineColor(kBlue);
     hNcollMod_MB[isys][xplot]->SetLineColor(kRed);
 
-    hNcoll_MB[isys][xplot]->SetLineWidth(2);
-    hNcollMod_MB[isys][xplot]->SetLineWidth(2);
+    hNcoll_MB[isys][xplot]->SetLineWidth(lineWidth);
+    hNcollMod_MB[isys][xplot]->SetLineWidth(lineWidth);
 
     if (isys == 0)
     {
@@ -1364,8 +1322,8 @@ void calculate_RCP()
       hNcoll_cent[isys][xplot][icent]->SetLineColor(kBlue);
       hNcollMod_cent[isys][xplot][icent]->SetLineColor(kRed);
 
-      hNcoll_cent[isys][xplot][icent]->SetLineWidth(2);
-      hNcollMod_cent[isys][xplot][icent]->SetLineWidth(2);
+      hNcoll_cent[isys][xplot][icent]->SetLineWidth(lineWidth);
+      hNcollMod_cent[isys][xplot][icent]->SetLineWidth(lineWidth);
 
       if (isys == 0 || icent >= NCENT - 2)
       {
@@ -1432,7 +1390,7 @@ void calculate_RCP()
                            "L");
   }
 
-  
+
   //=====================================================//
   // PLOT
   //=====================================================//
@@ -1524,7 +1482,7 @@ void calculate_RCP()
   // gPad->SetLogy();
   // hBBCscNcollA[0][0]->GetYaxis()->SetRangeUser(1e2, 2e4);
   hBBCscNcollA[0][0]->GetXaxis()->SetRangeUser(1, 30);
-  hBBCscNcollA[0][0]->SetLineWidth(2);
+  hBBCscNcollA[0][0]->SetLineWidth(lineWidth);
   hBBCscNcollA[0][0]->SetLineColor(kBlack);
   hBBCscNcollA[0][0]->SetTitle(";Q_{BBC,Au}");
   hBBCscNcollA[0][0]->DrawCopy("hist");
@@ -1625,14 +1583,24 @@ void calculate_RCP()
   legraa_paper->AddEntry((TObject*)0, " arXiv:1509.04657", "");
 
 
-  TLegend *legjda_paper = new TLegend(0.4, 0.6, 0.95, 0.8);
+  TLegend *legjda_paper = new TLegend(0.4, 0.6, 0.95, 0.92);
   legjda_paper->SetFillStyle(0);
   legjda_paper->SetBorderSize(0);
   legjda_paper->SetTextSize(0.04);
-  legjda_paper->AddEntry(graa_NcollModABBCscMod[1][0], lsystem[1], "L");
-  legjda_paper->AddEntry(gJdA[0], "PHENIX d+Au", "P");
+  legjda_paper->AddEntry(graa_NcollABBCscMod[1][0], lsystem[1], "L");
+  legjda_paper->AddEntry(graa_NcollABBCscMod_linMod[1][0],
+                         Form("%s #times Linear CNM Effects", lsystem[1]),
+                         "L");
+  // legjda_paper->AddEntry((TObject*)0, "PHENIX d+Au", "P");
   legjda_paper->AddEntry((TObject*)0, "Phys.Rev.Lett. 107 (2011) 172301", "");
-  legjda_paper->AddEntry(gJdA_hpt[0], "PHENIX d+Au, p_{T}^{trig}>1 & p_{T}^{assoc}>1", "P");
+  for (int ix = 0; ix < NXBINS; ix++)
+  {
+    legjda_paper->AddEntry(gJdA[ix][0],
+                           // Form("PHENIX d+Au %.1e < x^{frag}_{Au} < %.1e", xbins[ix], xbins[ix + 1]),
+                           Form("PHENIX d+Au %.1e < x^{frag}_{Au} < %.1e", xmin_xbins[ix], xmax_xbins[ix]),
+                           "P");
+  }
+  // legjda_paper->AddEntry(gJdA_hpt[0], "PHENIX d+Au, p_{T}^{trig}>1 & p_{T}^{assoc}>1", "P");
 
 
   TLegend *legQ_paper = new TLegend(0.20, 0.25, 0.4, 0.5);
@@ -1737,7 +1705,7 @@ void calculate_RCP()
 
 
   TH1F* haxis_Q_paper = new TH1F("haxis_Q_paper",
-                                 ";x_{p};<Q_{BBC,Au}>/Q_{BBC,Au}(x_{p}=0)",
+                                 ";x_{p};<dN^{hard}/dQ(x_{p})>/<dN^{hard}/dQ(x_{p}=0)>",
                                  100, 0, 1);
   haxis_Q_paper->GetYaxis()->SetTitleOffset(0.9);
   haxis_Q_paper->GetYaxis()->CenterTitle();
@@ -1771,7 +1739,6 @@ void calculate_RCP()
   crcp_paper->SetRightMargin(0.0);
   crcp_paper->SetBottomMargin(0.0);
   crcp_paper->SetLeftMargin(0.0);
-  crcp_paper->Divide(1, NCENT - 1, 0, 0);
 
   TPad *prcp_paper[NCENT - 1];
   fracArea = 1. / (float)((NCENT - 1) - 2 + 1. / (1 - topMargin) + 1. / (1 - bottomMargin));
@@ -1812,7 +1779,7 @@ void calculate_RCP()
     prcp_paper[icent]->Draw();
 
     prcp_paper[icent]->cd();
-    haxis_rcp_paper->GetXaxis()->SetRangeUser(0, 0.5);
+    haxis_rcp_paper->GetXaxis()->SetRangeUser(0, 0.6);
     haxis_rcp_paper->Draw();
 
     for (int i = 0; i < NJET; i++)
@@ -1826,26 +1793,20 @@ void calculate_RCP()
 
 
     l1.DrawLine(0, 1, 0.5, 1);
-    lpaper.SetTextSize(0.08 * fracArea / (yh - yl));
+    lpaper.SetTextSize(0.06 * fracArea / (yh - yl));
     if (icent == NCENT - 2)
       legrcp_paper[icent]->Draw("same");
     else if (icent == 0)
     {
-      lpaper.SetTextSize(0.05);
-
       lpaper.DrawLatex(0.38, 0.88, Form("(%.0f-%.0f%%) / (%.0f-%.0f%%)",
                                         centl[1][icent], centl[1][icent + 1],
                                         centl[1][NCENT - 1], centl[1][NCENT]));
-      lpaper.SetTextSize(0.08);
     }
     else
     {
-      lpaper.SetTextSize(0.05);
-
       lpaper.DrawLatex(0.38, 0.90, Form("(%.0f-%.0f%%) / (%.0f-%.0f%%)",
                                         centl[1][icent], centl[1][icent + 1],
                                         centl[1][NCENT - 1], centl[1][NCENT]));
-      lpaper.SetTextSize(0.08);
     }
     if (icent == 0)
       lpaper.DrawLatex(0.9, 0.88, plabel[icent]);
@@ -1905,6 +1866,7 @@ void calculate_RCP()
 
     praa_paper[icent]->cd();
     haxis_raa_paper->GetYaxis()->SetRangeUser(raal[icent], raah[icent]);
+    haxis_raa_paper->GetXaxis()->SetRangeUser(0, 0.6);
     haxis_raa_paper->DrawCopy();
 
     for (int i = 0; i < NJET; i++)
@@ -1918,7 +1880,7 @@ void calculate_RCP()
     l1.DrawLine(0, 1, 1.0, 1);
     if (icent == 0)
       legraa_paper->Draw("same");
-    lpaper.SetTextSize(0.08 * fracArea / (yh - yl));
+    lpaper.SetTextSize(0.06 * fracArea / (yh - yl));
     if (icent == NCENT - 1)
       lpaper.DrawLatex(0.9, 0.22, plabel[icent]);
     else
@@ -1950,85 +1912,110 @@ void calculate_RCP()
   cjda_paper->SetRightMargin(0);
   cjda_paper->SetBottomMargin(0);
   cjda_paper->SetLeftMargin(0);
-  cjda_paper->Divide(1, 3, 0, 0);
 
-  cjda_paper->GetPad(1)->SetTopMargin(0.13);
-  cjda_paper->GetPad(1)->SetRightMargin(0.02);
-  cjda_paper->GetPad(1)->SetBottomMargin(0.00);
-  cjda_paper->GetPad(1)->SetLeftMargin(0.15);
-  cjda_paper->GetPad(1)->SetTicks(0, 1);
+  TPad *pjda_paper[3];
+  fracArea = 1. / (float)(3 - 2 + 1. / (1 - topMargin) + 1. / (1 - bottomMargin));
 
-  cjda_paper->GetPad(2)->SetTopMargin(0.00);
-  cjda_paper->GetPad(2)->SetRightMargin(0.02);
-  cjda_paper->GetPad(2)->SetBottomMargin(0.00);
-  cjda_paper->GetPad(2)->SetLeftMargin(0.15);
-  cjda_paper->GetPad(2)->SetTicks(1, 1);
-
-  cjda_paper->GetPad(3)->SetTopMargin(0.00);
-  cjda_paper->GetPad(3)->SetRightMargin(0.02);
-  cjda_paper->GetPad(3)->SetBottomMargin(0.15);
-  cjda_paper->GetPad(3)->SetLeftMargin(0.15);
-  cjda_paper->GetPad(3)->SetTicks(1, 1);
-
-  cjda_paper->cd(1);
+  //-- 0-20%
+  cjda_paper->cd();
+  yl = 1.0 - fracArea * (1. / (1. - topMargin));
+  yh = 1;
+  cout << " jdA 0 - yl:" << yl << " yh:" << yh <<  "fracArea:" << fracArea << endl;
+  pjda_paper[0] = new TPad("pjda_paper_0", "", 0, yl, 1, yh);
+  pjda_paper[0]->SetLeftMargin(0.15);
+  pjda_paper[0]->SetRightMargin(0.05);
+  pjda_paper[0]->SetTopMargin(topMargin);
+  pjda_paper[0]->SetBottomMargin(0);
+  pjda_paper[0]->SetTicks(1, 1);
+  pjda_paper[0]->Draw();
+  pjda_paper[0]->cd();
   haxis_jda_paper->GetYaxis()->SetRangeUser(0.01, 1.09);
   haxis_jda_paper->DrawCopy();
 
-  gx_paper->Draw("same");
-
-
-  for (int j = 0; j < lpt; j++)
-    bJdA[0][j]->Draw("same");
-  gJdA[0]->Draw("P");
-
-  for (int j = 0; j < hpt; j++)
-    bJdA_hpt[0][j]->Draw("same");
-  gJdA_hpt[0]->Draw("P");
+  for (int ix = 0; ix < NXBINS; ix++)
+  {
+    for (int j = 0; j < nxjda[ix]; j++)
+      bJdA[ix][0][j]->Draw("same");
+    gJdA[ix][0]->Draw("P");
+  }
 
   graa_NcollABBCscMod[1][0]->Draw("C");
+  graa_NcollABBCscMod_linMod[1][0]->Draw("C");
   // graa_NcollModABBCscMod[1][0]->Draw("C");
 
   l1.DrawLine(0, 1, 1.0, 1);
+  label.SetTextSize(0.06 * fracArea / (yh - yl));
   label.DrawLatex(0.3, 0.1, "0-20%");
-  label.DrawLatex(0.95, 0.83, "(a)");
+  // label.DrawLatex(0.9, 0.95 - topMargin, "(a)");
+  label.DrawLatex(0.18, 0.95 - topMargin, "(a)");
   legjda_paper->Draw("same");
 
-  cjda_paper->cd(2);
+  //-- 60-88%
+  cjda_paper->cd();
+  yl = 1.0 - (1. / (1. - topMargin) + 1) * fracArea;
+  yh = 1.0 - (1. / (1. - topMargin) + 1 - 1) * fracArea;
+  cout << " jdA 1 - yl:" << yl << " yh:" << yh <<  "fracArea:" << fracArea << endl;
+  pjda_paper[1] = new TPad("pjda_paper_1", "", 0, yl, 1, yh);
+  pjda_paper[1]->SetLeftMargin(0.15);
+  pjda_paper[1]->SetRightMargin(0.05);
+  pjda_paper[1]->SetTopMargin(0);
+  pjda_paper[1]->SetBottomMargin(0);
+  pjda_paper[1]->SetTicks(1, 1);
+  pjda_paper[1]->Draw();
+  pjda_paper[1]->cd();
   haxis_jda_paper->GetYaxis()->SetRangeUser(0.01, 1.99);
   haxis_jda_paper->DrawCopy();
 
-  for (int j = 0; j < lpt; j++)
-    bJdA[1][j]->Draw("same");
-  gJdA[1]->Draw("P");
+  for (int ix = 0; ix < NXBINS; ix++)
+  {
+    for (int j = 0; j < nxjda[ix]; j++)
+      bJdA[ix][1][j]->Draw("same");
+    gJdA[ix][1]->Draw("P");
+  }
 
-  for (int j = 0; j < hpt; j++)
-    bJdA_hpt[1][j]->Draw("same");
-  gJdA_hpt[1]->Draw("P");
-
-  graa_NcollModABBCscMod[1][NCENT - 1]->Draw("C");
+  // graa_NcollModABBCscMod[1][NCENT - 1]->Draw("C");
+  graa_NcollABBCscMod[1][NCENT - 1]->Draw("C");
+  graa_NcollABBCscMod_linMod[1][NCENT - 1]->Draw("C");
 
   l1.DrawLine(0, 1, 1.0, 1);
+  label.SetTextSize(0.06 * fracArea / (yh - yl));
   label.DrawLatex(0.3, 0.1, "60-88%");
-  label.DrawLatex(0.95, 0.95, "(b)");
+  // label.DrawLatex(0.9, 0.95, "(b)");
+  label.DrawLatex(0.18, 0.95, "(b)");
 
-  cjda_paper->cd(3);
+  //-- Jcp
+  cjda_paper->cd();
+  yl = 0;
+  yh = 1.0 - (1. / (1. - topMargin) + 2 - 1) * fracArea;
+  cout << " jdA 2 - yl:" << yl << " yh:" << yh <<  "fracArea:" << fracArea << endl;
+  pjda_paper[2] = new TPad("pjda_paper_2", "", 0, yl, 1, yh);
+  pjda_paper[2]->SetLeftMargin(0.15);
+  pjda_paper[2]->SetRightMargin(0.05);
+  pjda_paper[2]->SetTopMargin(0);
+  pjda_paper[2]->SetBottomMargin(bottomMargin);
+  pjda_paper[2]->SetTicks(1, 1);
+  pjda_paper[2]->Draw();
+  pjda_paper[2]->cd();
   haxis_jcp_paper->GetYaxis()->SetRangeUser(0.01, 1.09);
   haxis_jcp_paper->DrawCopy();
 
-  for (int j = 0; j < lpt; j++)
-    bJcp[j]->Draw("same");
-  gJcp->Draw("P");
+  for (int ix = 0; ix < NXBINS; ix++)
+  {
+    for (int j = 0; j < nxjda[ix]; j++)
+      bJcp[ix][j]->Draw("same");
+    gJcp[ix]->Draw("P");
+  }
 
-  for (int j = 0; j < hpt; j++)
-    bJcp_hpt[j]->Draw("same");
-  gJcp_hpt->Draw("P");
 
-  grcp_NcollABBCscMod[1][0]->Draw("same");
   // grcp_NcollModABBCscMod[1][0]->Draw("same");
+  grcp_NcollABBCscMod[1][0]->Draw("same");
+  grcp_NcollABBCscMod_linMod[1][0]->Draw("same");
 
   l1.DrawLine(0, 1, 1.0, 1);
-  label.DrawLatex(0.3, 0.2, "(0-20%)/(60-88%)");
-  label.DrawLatex(0.95, 0.95, "(c)");
+  label.SetTextSize(0.06 * fracArea / (yh - yl));
+  label.DrawLatex(0.3, 0.1 + bottomMargin, "(0-20%)/(60-88%)");
+  // label.DrawLatex(0.9, 0.95, "(c)");
+  label.DrawLatex(0.18, 0.95, "(c)");
 
 
 
@@ -2056,6 +2043,11 @@ void calculate_RCP()
   {
     cout << endl;
     cout << "--> Saving RCP to " << outFile << endl;
+  }
+  if (printPlots)
+  {
+    cout << endl;
+    cout << "--> Printing plots to pdf" << endl;
 
     cyield->Print("yield_systems.pdf");
     cncoll->Print("Ncoll_systems.pdf");
@@ -2072,181 +2064,181 @@ void calculate_RCP()
     // cjda_rat_paper->Print("JdA_rat_paper.pdf");
   }
 
-//=====================================================//
-// DO SOME PRINTING
-//=====================================================//
-  cout << endl;
-  cout << "--> Printing ... " << endl;
+//   //=====================================================//
+//   // DO SOME PRINTING
+//   //=====================================================//
+//   cout << endl;
+//   cout << "--> Printing ... " << endl;
 
-  cout << setprecision(2) << fixed;
-  cout << endl;
-  cout << " ncoll MB " << endl;
-  cout << "x";
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-    cout << " & " << collSystem[isys];
-  cout << " \\\\" << endl;
-  cout << "0.00";
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-    cout << " & " << hNcoll_MB[isys][0]->GetMean();
-  cout << "\\\\" << endl;
-  for (int ix = 0; ix < NX; ix++)
-  {
-    cout << x[ix];
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-      cout << " & " << hNcollMod_MB[isys][ix]->GetMean();
-    cout << "\\\\" << endl;
-  }
+//   cout << setprecision(2) << fixed;
+//   cout << endl;
+//   cout << " ncoll MB " << endl;
+//   cout << "x";
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//     cout << " & " << collSystem[isys];
+//   cout << " \\\\" << endl;
+//   cout << "0.00";
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//     cout << " & " << hNcoll_MB[isys][0]->GetMean();
+//   cout << "\\\\" << endl;
+//   for (int ix = 0; ix < NX; ix++)
+//   {
+//     cout << x[ix];
+//     for (int isys = 0; isys < NSYSTEMS; isys++)
+//       cout << " & " << hNcollMod_MB[isys][ix]->GetMean();
+//     cout << "\\\\" << endl;
+//   }
 
-  cout << endl;
-  cout << "-- ncoll ==" << endl;
-  cout << "x sig(x)";
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-    cout << " " << collSystem[isys];
-  cout << endl;
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-  {
-    cout << " & 0-100";
-    for (int icent = 0; icent < NCENT; icent++)
-      cout << " & " << centl[isys][icent] << "-" << centl[isys][icent + 1];
-  }
-  cout << " \\\\" << endl;
-  cout << "PHENIX & 42.00";
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-  {
-    cout << " & " << Ncoll_PHENIX[isys][NCENT];
-    for (int icent = 0; icent < NCENT; icent++)
-      cout << " & " << Ncoll_PHENIX[isys][icent];
-  }
-  cout << "0.00 & 42.00";
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-  {
-    cout << " & " << hNcoll_MB[isys][0]->GetMean();
-    for (int icent = 0; icent < NCENT; icent++)
-      cout << " & " << hNcoll_cent[isys][0][icent]->GetMean();
-  }
-  cout << " \\\\" << endl;
-  for (int ix = 0; ix < NX; ix++)
-  {
-    cout << x[ix];
-    cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-    {
-      cout << " & " << hNcollMod_MB[isys][ix]->GetMean();
-      for (int icent = 0; icent < NCENT; icent++)
-        cout << " & " << hNcollMod_cent[isys][ix][icent]->GetMean();
-    }
-    cout << " \\\\" << endl;
-  }
+//   cout << endl;
+//   cout << "-- ncoll ==" << endl;
+//   cout << "x sig(x)";
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//     cout << " " << collSystem[isys];
+//   cout << endl;
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//   {
+//     cout << " & 0-100";
+//     for (int icent = 0; icent < NCENT; icent++)
+//       cout << " & " << centl[isys][icent] << "-" << centl[isys][icent + 1];
+//   }
+//   cout << " \\\\" << endl;
+//   cout << "PHENIX & 42.00";
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//   {
+//     cout << " & " << Ncoll_PHENIX[isys][NCENT];
+//     for (int icent = 0; icent < NCENT; icent++)
+//       cout << " & " << Ncoll_PHENIX[isys][icent];
+//   }
+//   cout << "0.00 & 42.00";
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//   {
+//     cout << " & " << hNcoll_MB[isys][0]->GetMean();
+//     for (int icent = 0; icent < NCENT; icent++)
+//       cout << " & " << hNcoll_cent[isys][0][icent]->GetMean();
+//   }
+//   cout << " \\\\" << endl;
+//   for (int ix = 0; ix < NX; ix++)
+//   {
+//     cout << x[ix];
+//     cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
+//     for (int isys = 0; isys < NSYSTEMS; isys++)
+//     {
+//       cout << " & " << hNcollMod_MB[isys][ix]->GetMean();
+//       for (int icent = 0; icent < NCENT; icent++)
+//         cout << " & " << hNcollMod_cent[isys][ix][icent]->GetMean();
+//     }
+//     cout << " \\\\" << endl;
+//   }
 
-  cout << endl;
-  cout << " Bias factors (both mod)" << endl;
-  cout << "x & sig(x)";
-  for (int icent = 0; icent < NCENT; icent++)
-  {
-    cout << " & " << centl[1][icent] << "-" << centl[1][icent + 1];
-  }
-  cout << " & 0-100";
-  cout << "\\\\" << endl;
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-  {
-    cout << " & & \\multicolumn{" << NCENT + 1 << "}{|c}{"
-         << collSystem[isys] << "} \\\\" << endl;
-    for (int ix = 0; ix < NX; ix++)
-    {
-      cout << x[ix];
-      cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
-      for (int icent = 0; icent < NCENT; icent++)
-        cout << " & " << bias_NcollModABBCscMod[isys][ix][icent];
-
-      cout << " & " << bias_NcollModABBCscMod_MB[isys][ix];
-      cout << "\\\\" << endl;
-    }
-  }
-
-  cout << endl;
-  cout << " Bias factors (mod A)" << endl;
-  cout << "x";
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-    cout << " & " << collSystem[isys];
-  cout << "\\\\" << endl;
-// for (int isys = 0; isys < NSYSTEMS; isys++)
-// {
+//   cout << endl;
+//   cout << " Bias factors (both mod)" << endl;
+//   cout << "x & sig(x)";
 //   for (int icent = 0; icent < NCENT; icent++)
-//     cout << " & " << centl[isys][icent] << "-" << centl[isys][icent +1];
-// }
-  cout << " \\\\" << endl;
-  for (int ix = 0; ix < NX; ix++)
-  {
-    cout << x[ix];
-    // cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-    {
-      // for (int icent = 0; icent < NCENT; icent++)
-      cout << " & " << bias_NcollModABBCsc[isys][ix][0];
-    }
-    cout << " | ";
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-    {
-      // for (int icent = 0; icent < NCENT; icent++)
-      cout << " & " << bias_NcollModABBCsc[isys][ix][NCENT - 1];
-    }
-    cout << " \\\\" << endl;
-  }
+//   {
+//     cout << " & " << centl[1][icent] << "-" << centl[1][icent + 1];
+//   }
+//   cout << " & 0-100";
+//   cout << "\\\\" << endl;
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//   {
+//     cout << " & & \\multicolumn{" << NCENT + 1 << "}{|c}{"
+//          << collSystem[isys] << "} \\\\" << endl;
+//     for (int ix = 0; ix < NX; ix++)
+//     {
+//       cout << x[ix];
+//       cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
+//       for (int icent = 0; icent < NCENT; icent++)
+//         cout << " & " << bias_NcollModABBCscMod[isys][ix][icent];
 
-  cout << endl;
-  cout << " Bias factors (mod BBCsc)" << endl;
-  cout << "x";
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-    cout << " & " << collSystem[isys];
-  cout << "\\\\" << endl;
-// for (int isys = 0; isys < NSYSTEMS; isys++)
-// {
-//   for (int icent = 0; icent < NCENT; icent++)
-//     cout << " & " << centl[isys][icent] << "-" << centl[isys][icent + 1];
-// }
-  cout << " \\\\" << endl;
-  for (int ix = 0; ix < NX; ix++)
-  {
-    cout << x[ix];
-    // cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-    {
-      // for (int icent = 0; icent < NCENT; icent++)
-      cout << " & " << bias_NcollABBCscMod[isys][ix][0];
-    }
-    cout << " | ";
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-    {
-      // for (int icent = 0; icent < NCENT; icent++)
-      cout << " & " << bias_NcollABBCscMod[isys][ix][NCENT - 1];
-    }
-    cout << " \\\\" << endl;
-  }
+//       cout << " & " << bias_NcollModABBCscMod_MB[isys][ix];
+//       cout << "\\\\" << endl;
+//     }
+//   }
+
+//   cout << endl;
+//   cout << " Bias factors (mod A)" << endl;
+//   cout << "x";
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//     cout << " & " << collSystem[isys];
+//   cout << "\\\\" << endl;
+// // for (int isys = 0; isys < NSYSTEMS; isys++)
+// // {
+// //   for (int icent = 0; icent < NCENT; icent++)
+// //     cout << " & " << centl[isys][icent] << "-" << centl[isys][icent +1];
+// // }
+//   cout << " \\\\" << endl;
+//   for (int ix = 0; ix < NX; ix++)
+//   {
+//     cout << x[ix];
+//     // cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
+//     for (int isys = 0; isys < NSYSTEMS; isys++)
+//     {
+//       // for (int icent = 0; icent < NCENT; icent++)
+//       cout << " & " << bias_NcollModABBCsc[isys][ix][0];
+//     }
+//     cout << " | ";
+//     for (int isys = 0; isys < NSYSTEMS; isys++)
+//     {
+//       // for (int icent = 0; icent < NCENT; icent++)
+//       cout << " & " << bias_NcollModABBCsc[isys][ix][NCENT - 1];
+//     }
+//     cout << " \\\\" << endl;
+//   }
+
+//   cout << endl;
+//   cout << " Bias factors (mod BBCsc)" << endl;
+//   cout << "x";
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//     cout << " & " << collSystem[isys];
+//   cout << "\\\\" << endl;
+// // for (int isys = 0; isys < NSYSTEMS; isys++)
+// // {
+// //   for (int icent = 0; icent < NCENT; icent++)
+// //     cout << " & " << centl[isys][icent] << "-" << centl[isys][icent + 1];
+// // }
+//   cout << " \\\\" << endl;
+//   for (int ix = 0; ix < NX; ix++)
+//   {
+//     cout << x[ix];
+//     // cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
+//     for (int isys = 0; isys < NSYSTEMS; isys++)
+//     {
+//       // for (int icent = 0; icent < NCENT; icent++)
+//       cout << " & " << bias_NcollABBCscMod[isys][ix][0];
+//     }
+//     cout << " | ";
+//     for (int isys = 0; isys < NSYSTEMS; isys++)
+//     {
+//       // for (int icent = 0; icent < NCENT; icent++)
+//       cout << " & " << bias_NcollABBCscMod[isys][ix][NCENT - 1];
+//     }
+//     cout << " \\\\" << endl;
+//   }
 
 
-  cout << endl;
-  cout << " Rcp cent " << endl;
-  cout << "x ";
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-    cout << " & " << collSystem[isys];
-  cout << "\\\\" << endl;
-  for (int isys = 0; isys < NSYSTEMS; isys++)
-  {
-    for (int icent = 0; icent < NCENT - 1; icent++)
-      cout << " & " << centl[isys][icent] << "-" << centl[isys][icent + 1];
-  }
-  cout << " \\\\" << endl;
-  for (int ix = 0; ix < NX; ix++)
-  {
-    cout << x[ix];
-    // cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
-    for (int isys = 0; isys < NSYSTEMS; isys++)
-    {
-      for (int icent = 0; icent < NCENT - 1; icent++)
-        cout << " & " << rcp_NcollModABBCscMod[isys][icent][ix];
-    }
-    cout << " \\\\" << endl;
-  }
+//   cout << endl;
+//   cout << " Rcp cent " << endl;
+//   cout << "x ";
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//     cout << " & " << collSystem[isys];
+//   cout << "\\\\" << endl;
+//   for (int isys = 0; isys < NSYSTEMS; isys++)
+//   {
+//     for (int icent = 0; icent < NCENT - 1; icent++)
+//       cout << " & " << centl[isys][icent] << "-" << centl[isys][icent + 1];
+//   }
+//   cout << " \\\\" << endl;
+//   for (int ix = 0; ix < NX; ix++)
+//   {
+//     cout << x[ix];
+//     // cout << " & " << 42 * 0.25 * TMath::Power(1 + TMath::Exp(-0.75 * x[ix]), 2);
+//     for (int isys = 0; isys < NSYSTEMS; isys++)
+//     {
+//       for (int icent = 0; icent < NCENT - 1; icent++)
+//         cout << " & " << rcp_NcollModABBCscMod[isys][icent][ix];
+//     }
+//     cout << " \\\\" << endl;
+//   }
 
 
 
