@@ -75,157 +75,147 @@ void calculate_RCP()
   // SET RUNNING CONDITIONS
   //=====================================================//
 
-  // const int NX = 21;             // Number of x values
-  // double x[] = {0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
-  //               0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99
-  //              };
-  const int NX = 7;
-  double x[NX] = {0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
+  const int NX = 21;             // Number of x values
+  double x[] = {0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
+                0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99
+               };
+  // const int NX = 7;
+  // double x[NX] = {0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
 
-  double beta = 1.5;
+  double beta = 1.4;
 
-  const int NSYSTEMS = 1;
-  const char *collSystem[] = {"dAu", "dAu", "3HeAu"};
-  // const char *collSystem[] = {"pAu", "dAu", "3HeAu"};
+  const int NSYSTEMS = 3;
+  const char *collSystem[] = {"pAu", "dAu", "3HeAu"};
 
   bool saveRcp = true;
-  const char *outFile = "Rcp_systems.root";
-  bool printPlots = false;
+  const char *outFile = "Rcp_systems_beta150.root";
 
   // Files for each x value for each system
-  const char *xFiles[NSYSTEMS][NX] =
-  {
-    {
-      "rootfiles/glauber_dau_snn42_beta15_x001_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_beta15_x010_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_beta15_x020_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_beta15_x030_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_beta15_x040_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_beta15_x050_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_beta15_x060_ntuple_100k.root",
-    },
-  };
-  // for (int isys = 0; isys < NSYSTEMS; isys++)
-  // {
-  //   for (int ix = 0; ix < NX; ix++)
-  //   {
-  //     xFiles[isys][ix] = Form("rootfiles/glauber_dau_snn42_beta%.0f_x%03.0f_ntuple_100k.root", beta * 10, x[ix] * 100);
-  //     cout << xFiles[isys][ix] << endl;
-  //   }
-  // }
   // const char *xFiles[NSYSTEMS][NX] =
   // {
-  //   { // pAu Files
-  //     "rootfiles/glauber_pau_snn42_x001_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x005_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x01_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x015_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x02_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x025_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x03_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x035_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x04_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x045_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x05_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x055_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x06_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x065_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x07_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x075_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x08_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x085_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x09_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x095_ntuple_100k.root",
-  //     "rootfiles/glauber_pau_snn42_x099_ntuple_100k.root",
+  //   {
+  //     "rootfiles/glauber_dau_snn42_beta148_x001_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_beta148_x010_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_beta148_x020_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_beta148_x030_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_beta148_x040_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_beta148_x050_ntuple_100k.root",
+  //     "rootfiles/glauber_dau_snn42_beta148_x060_ntuple_100k.root",
   //   },
-  //   { // dAu Files
-  //     "rootfiles/glauber_dau_snn42_x001_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x005_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x01_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x015_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x02_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x025_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x03_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x035_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x04_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x045_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x05_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x055_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x06_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x065_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x07_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x075_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x08_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x085_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x09_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x095_ntuple_100k.root",
-  //     "rootfiles/glauber_dau_snn42_x099_ntuple_100k.root",
-  //   },
-  //   { // He3Au Files
-  //     "rootfiles/glauber_he3au_snn42_x001_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x005_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x01_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x015_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x02_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x025_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x03_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x035_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x04_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x045_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x05_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x055_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x06_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x065_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x07_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x075_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x08_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x085_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x09_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x095_ntuple_100k.root",
-  //     "rootfiles/glauber_he3au_snn42_x099_ntuple_100k.root",
-  //   },
-
   // };
+  const char *xFiles[NSYSTEMS][NX] =
+  {
+    { // pAu Files
+      "rootfiles/glauber_pau_snn42_x001_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x005_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x01_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x015_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x02_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x025_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x03_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x035_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x04_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x045_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x05_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x055_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x06_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x065_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x07_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x075_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x08_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x085_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x09_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x095_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_x099_ntuple_100k.root",
+    },
+    { // dAu Files
+      "rootfiles/glauber_dau_snn42_x001_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x005_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x01_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x015_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x02_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x025_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x03_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x035_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x04_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x045_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x05_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x055_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x06_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x065_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x07_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x075_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x08_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x085_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x09_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x095_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_x099_ntuple_100k.root",
+    },
+    { // He3Au Files
+      "rootfiles/glauber_he3au_snn42_x001_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x005_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x01_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x015_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x02_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x025_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x03_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x035_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x04_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x045_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x05_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x055_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x06_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x065_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x07_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x075_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x08_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x085_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x09_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x095_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_x099_ntuple_100k.root",
+    },
+
+  };
 
   // Ntuple name stored in files for each system
   const char *ntpName[NSYSTEMS] =
   {
-    // "nt_p_Au", // pAu
+    "nt_p_Au", // pAu
     "nt_dh_Au", // dAu
-    // "nt_He3_Au", // He3Au
+    "nt_He3_Au", // He3Au
   };
 
   // Centrality bins
   const int NCENT = 4;
   double centl[NSYSTEMS][NCENT + 1] =
   {
-    // {0, 20, 40, 60, 84}, // pAu
+    {0, 20, 40, 60, 84}, // pAu
     {0, 20, 40, 60, 88}, // dAu
-    // {0, 20, 40, 60, 88}, // He3Au
+    {0, 20, 40, 60, 88}, // He3Au
   };
 
   // PHENIX values (last entry is 0-100%)
   double Ncoll_PHENIX[NSYSTEMS][NCENT + 1] =
   {
-    // { 8.20, 6.06, 4.43, 2.62, 4.67}, // pAu
+    { 8.20, 6.06, 4.43, 2.62, 4.67}, // pAu
     {15.1, 10.2, 6.6, 3.2, 7.6}, // dAu
-    // {22.37, 14.71, 8.28, 3.38, 10.45}, //HeAu
+    {22.37, 14.71, 8.28, 3.38, 10.45}, //HeAu
   };
 
   // Negative Binomial Distribution parameters for each system
   double NBD_par[NSYSTEMS][2] =
   {
-    // {3.14, 0.47}, //pAu {mu, k}
+    {3.14, 0.47}, //pAu {mu, k}
     {3.04, 0.46}, //dAu {mu, k}
-    // {2.91, 0.55}, //3HeAu {mu, k}
+    {2.91, 0.55}, //3HeAu {mu, k}
   };
 
   // MB trigger efficiency function parameters
   double eff_par[NSYSTEMS][2] =
   {
-    // {1.07552e+00, 6.02328e-01}, // pAu
+    {1.07552e+00, 6.02328e-01}, // pAu
     {0.897, 0.612}, // dAu (from D. McGlinchey thesis)
-    // {1.22134e+00, 5.10114e-01}, // He3Au
+    {1.22134e+00, 5.10114e-01}, // He3Au
   };
 
   // line colors
