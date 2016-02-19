@@ -959,9 +959,11 @@ Bool_t TGlauberMC::CalcEvent(Double_t bgen)
     fAmod = (int) gRandom->Integer(fAN);
 
     // Modified "ball" diameter
+    // double beta = 1.5;
+    double beta = 1.38;
     // Double_t d2mod = (Double_t)fXSectEvent/(TMath::Pi()*10) * (1 - fAx); // in fm^2
     // Double_t d2mod = (Double_t)fXSectEvent / (TMath::Pi() * 10) * TMath::Exp(-8 * fAx); // in fm^2
-    Double_t xsecmod = (Double_t)fXSectEvent * TMath::Power((1 + TMath::Exp(-1.5 * fAx)), 2) / 4.0;
+    Double_t xsecmod = (Double_t)fXSectEvent * TMath::Power((1 + TMath::Exp(-1 * beta * fAx)), 2) / 4.0;
     Double_t d2mod = xsecmod / (TMath::Pi() * 10); // in fm^2
 
     // loop over all nucleons, filling the modified Ncoll
