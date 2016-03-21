@@ -960,7 +960,7 @@ Bool_t TGlauberMC::CalcEvent(Double_t bgen)
 
     // Modified "ball" diameter
     // double beta = 1.5;
-    double beta = 1.38;
+    double beta = 1.47;
     // Double_t d2mod = (Double_t)fXSectEvent/(TMath::Pi()*10) * (1 - fAx); // in fm^2
     // Double_t d2mod = (Double_t)fXSectEvent / (TMath::Pi() * 10) * TMath::Exp(-8 * fAx); // in fm^2
     Double_t xsecmod = (Double_t)fXSectEvent * TMath::Power((1 + TMath::Exp(-1 * beta * fAx)), 2) / 4.0;
