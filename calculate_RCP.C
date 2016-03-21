@@ -67,10 +67,6 @@ double evalNBD(double n, double mu, double k)
 
 void calculate_RCP()
 {
-
-  gStyle->SetOptStat(0);
-  gStyle->SetOptTitle(0);
-
   //=====================================================//
   // SET RUNNING CONDITIONS
   //=====================================================//
@@ -88,7 +84,7 @@ void calculate_RCP()
   const char *collSystem[] = {"pAu", "dAu", "3HeAu"};
 
   bool saveRcp = true;
-  const char *outFile = "Rcp_systems_beta150.root";
+  const char *outFile = "Rcp_systems_beta138.root";
 
   // Files for each x value for each system
   // const char *xFiles[NSYSTEMS][NX] =
@@ -106,73 +102,73 @@ void calculate_RCP()
   const char *xFiles[NSYSTEMS][NX] =
   {
     { // pAu Files
-      "rootfiles/glauber_pau_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x005_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x025_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x045_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x05_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x055_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x06_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x065_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x07_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x075_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x08_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x085_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x09_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x095_ntuple_100k.root",
-      "rootfiles/glauber_pau_snn42_x099_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x001_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x005_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x010_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x015_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x020_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x025_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x030_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x035_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x040_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x045_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x050_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x055_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x060_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x065_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x070_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x075_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x080_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x085_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x090_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x095_ntuple_100k.root",
+      "rootfiles/glauber_pau_snn42_beta138_x099_ntuple_100k.root",
     },
     { // dAu Files
-      "rootfiles/glauber_dau_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x005_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x025_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x045_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x05_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x055_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x06_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x065_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x07_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x075_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x08_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x085_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x09_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x095_ntuple_100k.root",
-      "rootfiles/glauber_dau_snn42_x099_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x001_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x005_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x010_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x015_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x020_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x025_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x030_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x035_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x040_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x045_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x050_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x055_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x060_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x065_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x070_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x075_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x080_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x085_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x090_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x095_ntuple_100k.root",
+      "rootfiles/glauber_dau_snn42_beta138_x099_ntuple_100k.root",
     },
     { // He3Au Files
-      "rootfiles/glauber_he3au_snn42_x001_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x005_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x01_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x015_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x02_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x025_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x03_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x035_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x04_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x045_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x05_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x055_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x06_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x065_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x07_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x075_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x08_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x085_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x09_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x095_ntuple_100k.root",
-      "rootfiles/glauber_he3au_snn42_x099_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x001_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x005_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x010_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x015_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x020_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x025_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x030_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x035_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x040_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x045_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x050_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x055_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x060_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x065_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x070_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x075_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x080_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x085_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x090_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x095_ntuple_100k.root",
+      "rootfiles/glauber_he3au_snn42_beta138_x099_ntuple_100k.root",
     },
 
   };
@@ -389,11 +385,12 @@ void calculate_RCP()
 
 
   // for testing linear modification due to CNM effects
-  // NOTE only central and peripheral values real, others set ot 1
-  // to make things easier
-  // double linCentMod = 0.20;
-  // double linPeriphMod = 0.60;
-  double linMod[NCENT] = {0.20, 1.0, 1.0, 0.60};
+  // (Values from Jamie assuming linear w.r.t. thickness)
+  //    Central suppression        = 0.207931
+  //    Mid-Central suppression    = 0.317964
+  //    Mid-Peripheral suppression = 0.436399
+  //    Peripheral suppression     = 0.604668
+  double linMod[NCENT] = {0.207931, 0.317964, 0.436399, 0.604668};
   TGraph *graa_NcollABBCscMod_linMod[NSYSTEMS][NCENT];
   TGraph *grcp_NcollABBCscMod_linMod[NSYSTEMS][NCENT - 1];
 
