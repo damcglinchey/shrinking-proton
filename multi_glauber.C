@@ -19,13 +19,13 @@ void multi_glauber()
 		cout << "---------" << x[ix] << "---------" << endl;
 
 		runAndSaveNtuple(100000, "p", "Au", 42, -1, 0.4, x[ix],
-		                 Form("rootfiles/glauber_pau_snn42_beta141_x%03.0f_ntuple_100k.root", x[ix] * 100));
+		                 Form("rootfiles/glauber_pau_snn42_beta147_x%03.0f_ntuple_100k.root", x[ix] * 100));
 
 		runAndSaveNtuple(100000, "dh", "Au", 42, -1, 0.4, x[ix],
-		                 Form("rootfiles/glauber_dau_snn42_beta141_x%03.0f_ntuple_100k.root", x[ix] * 100));
+		                 Form("rootfiles/glauber_dau_snn42_beta147_x%03.0f_ntuple_100k.root", x[ix] * 100));
 
 		runAndSaveNtuple(100000, "He3", "Au", 42, -1, 0.4, x[ix],
-		                 Form("rootfiles/glauber_he3au_snn42_beta141_x%03.0f_ntuple_100k.root", x[ix] * 100));
+		                 Form("rootfiles/glauber_he3au_snn42_beta147_x%03.0f_ntuple_100k.root", x[ix] * 100));
 
 		// runAndSaveNtuple(100000, "dh", "Au", 42, -1, 0.4, x[ix],
 		//                  Form("rootfiles/glauber_dau_snn42_beta148_x%03.0f_ntuple_100k.root", x[ix]*100));
